@@ -163,12 +163,17 @@ async function createStyles(payload) {
  * mode (Figma Starter is limited to one mode per collection).
  */
 async function createThemeVariables(variables) {
+  if (!variables || !variables.length) { return { kind: "error", made: 0, reason: "no theme data received" }; }
   try {
     const n = await makeThemeVariables(variables);
     return { kind: "variables", made: n };
   } catch (e) {
-    const n = await makeThemeStyles(variables);
-    return { kind: "styles", made: n };
+    try {
+      const n = await makeThemeStyles(variables);
+      return { kind: "styles", made: n, reason: (e && e.message) ? e.message : String(e) };
+    } catch (e2) {
+      return { kind: "error", made: 0, reason: ((e && e.message) || e) + "  |  " + ((e2 && e2.message) || e2) };
+    }
   }
 }
 
@@ -269,9 +274,11 @@ figma.ui.onmessage = async function (msg) {
     if (msg.type === "create-theme-vars") {
       const res = await createThemeVariables(msg.variables);
       if (res.kind === "variables") {
-        figma.notify(res.made + " theme variables created in “Okra Theme” (Light, Dark modes)");
+        figma.notify(res.made + " theme variables created in “Okra Theme” (Light, Dark modes). Open the Variables panel.");
+      } else if (res.kind === "styles") {
+        figma.notify(res.made + " theme styles created under Theme/Light and Theme/Dark (variable modes unavailable: " + res.reason + ")");
       } else {
-        figma.notify(res.made + " theme styles created (Theme/Light, Theme/Dark). Variable modes need a paid Figma plan.");
+        figma.notify("Okra could not create the theme: " + res.reason, { error: true });
       }
       figma.ui.postMessage({ type: "done" });
     }
@@ -286,7 +293,7 @@ figma.ui.onmessage = async function (msg) {
       figma.closePlugin();
     }
   } catch (e) {
-    figma.notify("Spectra error: " + (e && e.message ? e.message : e), { error: true });
+    figma.notify("Okra error: " + (e && e.message ? e.message : e), { error: true });
     figma.ui.postMessage({ type: "done" });
   }
 };
