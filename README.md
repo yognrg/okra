@@ -1,74 +1,140 @@
-# Okra — OKLCH Palette Generator (Figma plugin)
+<div align="center">
 
-Generate perceptually even color scales in OKLCH, drop them on the canvas with
-auto layout, and create Figma color styles. Pick a base color, pick a scale
-style, name it, generate.
+# Okra
 
-Created by Yog. https://yogfolio.vercel.app
+### OKLCH color palette generator for Figma
 
-## Why OKLCH
+Build perceptually even color scales that stay true to your hue, drop them on the canvas with auto layout, and turn them into Figma color styles in one click.
 
-Shades are built by changing only the OKLCH lightness while hue and the chroma
-curve stay controlled. So a blue stays blue across every step. No purple drift
-in the light tints and no muddy gray in the dark ones, which is what happens
-with HSL.
+Pick a color. Pick a scale. Ship a palette.
 
-## Scale styles (dropdown)
+</div>
 
-- Default (50 to 950, 11 steps)
-- Material (tones 0 to 100, 13 steps)
-- iOS (50 to 900, 10 steps)
-- Ant Design (1 to 10, 10 steps)
-- Atlassian (0 to 1000, 12 steps)
-- Orbit (light to darkest, 6 named steps)
-- Custom (pick the number of colors, 5 to 14)
+---
+
+## Why this exists
+
+Most palette tools build shades in HSL or RGB. The problem shows up the moment you darken or lighten a color: the lighter steps drift toward a different hue and the darker ones go muddy and grey. You end up hand correcting every swatch.
+
+Okra builds every shade in **OKLCH**, a perceptually uniform color model. It changes only the lightness across a scale while the hue stays locked, so a blue stays blue from the lightest tint to the darkest shade.
+
+<div align="center">
+
+| | Lightest &rarr; Darkest |
+|:--|:--|
+| **OKLCH** | consistent blueness across all steps |
+| **HSL** | light steps drift to purple, dark steps go grey |
+
+</div>
+
+---
+
+## What is OKLCH
+
+OKLCH is a newer color model designed around how humans actually perceive color. Like the older LCH, it describes a color with three values, but it sits on top of the OKLab color space, which makes it far more predictable to work with.
+
+Every color is three numbers:
+
+| Value | What it controls | Range |
+|:--|:--|:--|
+| **L** &nbsp; Lightness | how bright the color is | `0` to `1` (or 0% to 100%) |
+| **C** &nbsp; Chroma | how intense the color is, like saturation | `0` upward |
+| **H** &nbsp; Hue | the hue angle on the color wheel | `0` to `360` |
+
+```css
+oklch(0.65 0.19 253)
+       L    C    H
+```
+
+### Consistent brightness
+
+Keep the same L, change only H, and every color feels like it belongs to the same family. Four buttons at `oklch(0.50 0.16 ...)` with different hues read as equally bright. Try that in HSL and some pop while others sink.
+
+### Predictable shades
+
+This is the heart of Okra. Move only the lightness and you get a clean scale with no hue or saturation drift. The color you started with stays recognisable at every step. That is exactly how Okra generates a 50 to 950 ramp from a single base color.
+
+### Gamut
+
+A gamut is the range of colors a screen can actually show. sRGB is the web default, Display P3 covers modern devices. OKLCH can describe colors beyond any real screen, so Okra maps any out of gamut shade back into sRGB by gently reducing its chroma while holding the lightness and hue steady. Your palette always lands on colors that render correctly.
+
+> Want to go deeper on the theory, play with the values, and see it all live? The reference below is the best place to start.
+
+---
 
 ## Features
 
-- Base color three ways: color picker, hex input, or OKLCH L C H sliders
-- Scale style as a dropdown, palette name auto filled and editable
-- Single screen, no scrolling
-- Live preview of every shade, base step marked with a ring
-- WCAG 2 contrast badge on every shade (AAA, AA, AA Large, Fail)
-- Copy dropdown: CSS variables (hex), CSS variables (oklch), Tailwind, hex list
-- Add to canvas as an auto-layout card with hex labels
-- Create local paint styles named `Name/step` (for example `Blue/500`)
-- Styles-only mode if you do not want anything drawn
-- Light and dark plugin UI
+- **Three ways to set the base color**: color picker, hex input, or OKLCH L, C, H sliders
+- **Seven scale styles** from a dropdown: Default, Material, iOS, Ant Design, Atlassian, Orbit, and a Custom scale where you choose the number of colors
+- **Auto naming**: the palette is named from its hue (Blue, Emerald, Violet), and you are free to rename it
+- **Live preview** of every shade with the base step marked
+- **WCAG 2 contrast badge** on each shade, so you know what passes AA or AAA before you use it
+- **Copy as code**: CSS variables (hex), CSS variables (oklch), Tailwind config, or a plain hex list
+- **Add to canvas** as a clean auto layout card with hex labels
+- **Create Figma color styles** named `Name/step`, for example `Blue/500`
+- **One screen, no scrolling**, with light and dark UI
 
-## Install (development plugin, no build step)
+---
 
-1. Keep these files together in one folder:
+## Scale styles
+
+| Style | Steps | Range |
+|:--|:--|:--|
+| Default | 11 | 50 to 950 |
+| Material | 13 | tones 0 to 100 |
+| iOS | 10 | 50 to 900 |
+| Ant Design | 10 | 1 to 10 |
+| Atlassian | 12 | 0 to 1000 |
+| Orbit | 6 | light to darkest |
+| Custom | 5 to 14 | your choice |
+
+---
+
+## Install
+
+Okra runs as a development plugin, no build step needed.
+
+1. Clone or download this repo and keep these files together in one folder:
    `manifest.json`, `code.js`, `ui.html`, `color.js`
-2. Figma desktop app: menu → Plugins → Development → Import plugin from
-   manifest, then pick `manifest.json`.
-3. Run it from Plugins → Development → Okra.
+2. In the Figma desktop app go to **Plugins &rarr; Development &rarr; Import plugin from manifest**
+3. Select `manifest.json`
+4. Run it any time from **Plugins &rarr; Development &rarr; Okra**
 
-`color.js` is already inlined into `ui.html`, so it is kept only as the source
-of truth. The plugin runs from `manifest.json`, `code.js` and `ui.html`.
+---
 
-## Files
+## How it works
+
+```
+OKLCH base  ->  per step: set lightness, hold hue, scale chroma
+            ->  OKLab  ->  linear sRGB
+            ->  gamut map (reduce chroma if out of range)
+            ->  sRGB hex  ->  swatches, styles, and exports
+```
 
 | File | Role |
-|------|------|
+|:--|:--|
 | `manifest.json` | Plugin manifest |
-| `code.js` | Main thread: draws the canvas card and creates paint styles |
+| `code.js` | Figma main thread: draws the canvas card and creates paint styles |
 | `ui.html` | Plugin UI with the color engine inlined |
 | `color.js` | The OKLCH engine (source), for reference and edits |
 
-## Editing the engine later
+Scale curves live in `color.js` under the `*_SCALE` constants. Each stop is an OKLCH lightness `L` from 0 to 1 and a chroma multiplier `cMul` applied to the base color chroma. Tune those to reshape any preset.
 
-Edit `color.js`, then re-inline it into `ui.html`. From the folder:
+After editing `color.js`, re inline it into `ui.html`:
 
-```
+```bash
 node -e 'const fs=require("fs");let h=fs.readFileSync("ui.body.html","utf8");h=h.replace("/* ===== OKRA_ENGINE_PLACEHOLDER ===== */",fs.readFileSync("color.js","utf8"));fs.writeFileSync("ui.html",h)'
 ```
 
-Scale curves live in `color.js` under the `*_SCALE` constants. Each stop is an
-OKLCH lightness `L` (0 to 1) and a chroma multiplier `cMul` applied to the base
-color chroma. Tune those to change how a preset looks.
+---
 
-## Renaming the plugin
+## Credits
 
-The name lives in three places: `manifest.json` (`name`), `code.js` (the canvas
-frame name) and `ui.html` (the header and footer). Change those and re-inline.
+- **OKLCH learning and reference**: [oklch.fyi](https://oklch.fyi) by [Jakub Krehel](https://x.com/jakubkrehel). A genuinely great resource for understanding and experimenting with OKLCH. The explanation above draws on it.
+- **Inspiration**: the Foundation Color Generator plugin, reimagined around OKLCH.
+
+<div align="center">
+
+Created by [**Yog**](https://yogfolio.vercel.app)
+
+</div>
