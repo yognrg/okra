@@ -403,6 +403,92 @@ function exportHexList(steps) {
   return steps.map(function (s) { return s.key + "\t" + s.hex; }).join("\n");
 }
 
+/* ---------- color format helpers (for the base color field) ---------- */
+
+// gamma sRGB 0..1 -> OKLCH
+function rgb01ToOklch(rgb) {
+  const lin = { r: gammaToLinear(rgb.r), g: gammaToLinear(rgb.g), b: gammaToLinear(rgb.b) };
+  const lab = linearSrgbToOklab(lin.r, lin.g, lin.b);
+  return oklabToOklch(lab.L, lab.a, lab.b);
+}
+
+// gamma sRGB 0..1 <-> HSL (h 0..360, s/l 0..100)
+function rgbToHsl(rgb) {
+  const r = rgb.r, g = rgb.g, b = rgb.b;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  let h = 0, s = 0; const l = (max + min) / 2;
+  const d = max - min;
+  if (d !== 0) {
+    s = d / (1 - Math.abs(2 * l - 1));
+    if (max === r) h = ((g - b) / d) % 6;
+    else if (max === g) h = (b - r) / d + 2;
+    else h = (r - g) / d + 4;
+    h *= 60; if (h < 0) h += 360;
+  }
+  return { h: h, s: s * 100, l: l * 100 };
+}
+function hslToRgb(h, s, l) {
+  h = ((h % 360) + 360) % 360; s /= 100; l /= 100;
+  const c = (1 - Math.abs(2 * l - 1)) * s;
+  const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+  const m = l - c / 2;
+  let r = 0, g = 0, b = 0;
+  if (h < 60) { r = c; g = x; }
+  else if (h < 120) { r = x; g = c; }
+  else if (h < 180) { g = c; b = x; }
+  else if (h < 240) { g = x; b = c; }
+  else if (h < 300) { r = x; b = c; }
+  else { r = c; b = x; }
+  return { r: r + m, g: g + m, b: b + m };
+}
+
+function formatRgb(rgb) {
+  return "rgb(" + Math.round(rgb.r * 255) + ", " + Math.round(rgb.g * 255) + ", " + Math.round(rgb.b * 255) + ")";
+}
+function formatHsl(rgb) {
+  const h = rgbToHsl(rgb);
+  return "hsl(" + Math.round(h.h) + ", " + Math.round(h.s) + "%, " + Math.round(h.l) + "%)";
+}
+
+/*
+ * Show the base color as a string in the chosen mode.
+ * base is { L, C, H }. mode is "hex" | "rgb" | "hsl" | "oklch".
+ */
+function baseToString(base, mode) {
+  const rgb = oklchToSrgb(base.L, base.C, base.H);
+  if (mode === "rgb") return formatRgb(rgb);
+  if (mode === "hsl") return formatHsl(rgb);
+  if (mode === "oklch") return formatOklch(base.L, base.C, base.H);
+  return rgbToHex(rgb);
+}
+
+/*
+ * Parse a user typed string in the chosen mode to an OKLCH base.
+ * Returns { L, C, H } or null if it does not parse.
+ */
+function stringToBase(str, mode) {
+  str = String(str).trim();
+  if (mode === "rgb") {
+    const m = str.match(/-?\d*\.?\d+/g);
+    if (!m || m.length < 3) return null;
+    const rgb = { r: clamp(+m[0], 0, 255) / 255, g: clamp(+m[1], 0, 255) / 255, b: clamp(+m[2], 0, 255) / 255 };
+    return rgb01ToOklch(rgb);
+  }
+  if (mode === "hsl") {
+    const m = str.match(/-?\d*\.?\d+/g);
+    if (!m || m.length < 3) return null;
+    return rgb01ToOklch(hslToRgb(+m[0], clamp(+m[1], 0, 100), clamp(+m[2], 0, 100)));
+  }
+  if (mode === "oklch") {
+    const m = str.match(/-?\d*\.?\d+/g);
+    if (!m || m.length < 3) return null;
+    let L = +m[0]; if (str.indexOf("%") !== -1 || L > 1.0001) L = L / 100; // accept 65% or 0.65
+    return { L: clamp(L, 0, 1), C: Math.max(0, +m[1]), H: ((+m[2] % 360) + 360) % 360 };
+  }
+  // hex
+  return hexToOklch(str);
+}
+
 /* Export for both module and global (plugin UI) use. */
 const SpectraColor = {
   oklchToSrgb: oklchToSrgb,
@@ -420,6 +506,8 @@ const SpectraColor = {
   exportTailwind: exportTailwind,
   exportHexList: exportHexList,
   slugify: slugify,
+  baseToString: baseToString,
+  stringToBase: stringToBase,
   PRESETS: PRESETS,
 };
 

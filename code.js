@@ -148,6 +148,11 @@ async function createStyles(payload) {
     let style = existing[name];
     if (!style) { style = figma.createPaintStyle(); style.name = name; }
     style.paints = solid(step.rgb);
+    // Figma's picker has no OKLCH format, so carry the value in the
+    // description where it stays visible on the style.
+    const parts = [step.hex];
+    if (step.oklch) parts.push(step.oklch);
+    style.description = parts.join("  ·  ");
     made++;
   });
   return made;

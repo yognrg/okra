@@ -78,6 +78,7 @@
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M3 4.5L6 7.5L9 4.5' stroke='%236b6f78' stroke-width='1.3' fill='none' stroke-linecap='round'/></svg>");
     background-repeat: no-repeat; background-position: right 9px center;
   }
+  .fmt { width: 84px; flex: 0 0 auto; font-size: 11px; font-weight: 600; padding: 0 22px 0 9px; background-position: right 7px center; }
 
   .countrow { display: none; align-items: center; gap: 10px; margin-top: 2px; }
   .countrow.show { display: flex; }
@@ -185,6 +186,12 @@
             <input type="color" id="picker" value="#1E90FF" />
           </button>
           <input type="text" id="hex" value="#1E90FF" spellcheck="false" />
+          <select id="fmt" class="fmt" title="Color format">
+            <option value="hex">HEX</option>
+            <option value="rgb">RGB</option>
+            <option value="hsl">HSL</option>
+            <option value="oklch">OKLCH</option>
+          </select>
         </div>
       </div>
 
@@ -262,16 +269,21 @@
     render();
   });
 
-  function isValidHex(v) { return /^#?[0-9a-fA-F]{6}$/.test(v) || /^#?[0-9a-fA-F]{3}$/.test(v); }
-  function normHex(v) { v = v.trim(); if (v[0] !== "#") v = "#" + v; if (v.length === 4) v = "#" + v[1]+v[1]+v[2]+v[2]+v[3]+v[3]; return v.toUpperCase(); }
+  var fmtSel = el("fmt");
+  var mode = "hex"; // base color field format: hex | rgb | hsl | oklch
   function baseHex() { return S.rgbToHex(S.oklchToSrgb(state.base.L, state.base.C, state.base.H)); }
 
-  function syncControlsFromBase() {
+  // push state.base out to every control. skipText leaves the text field alone
+  // (used while the user is typing in it so the cursor is not disturbed).
+  function applyBase(skipText) {
     var hx = baseHex();
-    picker.value = hx; hexInput.value = hx; swatchbtn.style.background = hx;
+    picker.value = hx; swatchbtn.style.background = hx;
     sL.value = (state.base.L * 100).toFixed(1); sC.value = state.base.C.toFixed(3); sH.value = state.base.H.toFixed(1);
     vL.textContent = Math.round(state.base.L * 100) + "%"; vC.textContent = state.base.C.toFixed(3); vH.textContent = Math.round(state.base.H);
+    if (!skipText) hexInput.value = S.baseToString(state.base, mode);
+    render();
   }
+  function syncControlsFromBase() { applyBase(false); }
 
   function pickInk(rgb) {
     function lin(c){return c<=0.03928?c/12.92:Math.pow((c+0.055)/1.055,2.4);}
@@ -308,20 +320,28 @@
     });
   }
 
-  function setBaseFromHex(hx) {
-    var o = S.hexToOklch(hx); if (!o) return;
+  // native picker always speaks hex
+  picker.addEventListener("input", function () {
+    var o = S.hexToOklch(picker.value); if (!o) return;
     state.base = { L: o.L, C: o.C, H: o.H };
-    syncControlsFromBase(); render();
-  }
-  picker.addEventListener("input", function () { setBaseFromHex(picker.value); });
-  hexInput.addEventListener("input", function () { if (isValidHex(hexInput.value)) setBaseFromHex(normHex(hexInput.value)); });
+    applyBase(false);
+  });
+
+  // text field parsed in the current format; leave the field text untouched
+  hexInput.addEventListener("input", function () {
+    var parsed = S.stringToBase(hexInput.value, mode);
+    if (parsed) { state.base = parsed; applyBase(true); }
+  });
+
+  // format switcher: rewrite the field in the chosen format
+  fmtSel.addEventListener("change", function () {
+    mode = fmtSel.value;
+    hexInput.value = S.baseToString(state.base, mode);
+  });
 
   function sliderChanged() {
     state.base = { L: parseFloat(sL.value) / 100, C: parseFloat(sC.value), H: parseFloat(sH.value) };
-    var hx = baseHex();
-    picker.value = hx; hexInput.value = hx; swatchbtn.style.background = hx;
-    vL.textContent = Math.round(state.base.L * 100) + "%"; vC.textContent = state.base.C.toFixed(3); vH.textContent = Math.round(state.base.H);
-    render();
+    applyBase(false);
   }
   sL.addEventListener("input", sliderChanged);
   sC.addEventListener("input", sliderChanged);
@@ -382,7 +402,7 @@
       colorName: (nameInput.value || "Color").trim(),
       presetLabel: lastPal.presetLabel,
       baseKey: lastPal.baseKey,
-      steps: lastPal.steps.map(function (s) { return { key: s.key, hex: s.hex, rgb: s.rgb, isBase: s.isBase }; }),
+      steps: lastPal.steps.map(function (s) { return { key: s.key, hex: s.hex, rgb: s.rgb, oklch: s.oklch, isBase: s.isBase }; }),
       createStyles: !!(withStyles && el("optStyles").checked),
       showHex: el("optHex").checked,
     };

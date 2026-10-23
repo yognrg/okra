@@ -68,14 +68,14 @@ A gamut is the range of colors a screen can actually show. sRGB is the web defau
 
 ## Features
 
-- **Three ways to set the base color**: color picker, hex input, or OKLCH L, C, H sliders
+- **Set the base color** by picker, by sliders (OKLCH L, C, H), or by typing it in **HEX, RGB, HSL, or OKLCH** with a format switcher
 - **Scale styles** from a dropdown: Tailwind, Material, Ant Design, Atlassian, Semantic, and a Custom scale where you choose the number of colors
 - **Auto naming**: the palette is named from its hue (Blue, Emerald, Violet), and you are free to rename it
 - **Live preview** of every shade with the base step marked
 - **WCAG 2 contrast badge** on each shade, so you know what passes AA or AAA before you use it
 - **Copy as code**: CSS variables (hex), CSS variables (oklch), Tailwind config, or a plain hex list
 - **Add to canvas** as a clean auto layout card with hex labels
-- **Create Figma color styles** named `Name/step`, for example `Blue/500`
+- **Create Figma color styles** named `Name/step`, for example `Blue/500`, each carrying its **hex and OKLCH value in the style description** (Figma's own picker has no OKLCH format, so the value lives on the style)
 - **One screen, no scrolling**, with light and dark UI
 
 ---
