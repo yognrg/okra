@@ -1,0 +1,14 @@
+{
+  "name": "Okra - OKLCH Palette Generator",
+  "id": "okra-oklch-palette-generator",
+  "api": "1.0.0",
+  "main": "code.js",
+  "ui": "ui.html",
+  "editorType": ["figma"],
+  "documentAccess": "dynamic-page",
+  "networkAccess": {
+    "allowedDomains": ["none"]
+  },
+  "capabilities": [],
+  "enableProposedApi": false
+}

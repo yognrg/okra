@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<style>
+  :root {
+    --bg: #ffffff;
+    --panel: #f6f7f9;
+    --line: #e7e8ec;
+    --ink: #16181d;
+    --ink-soft: #6b6f78;
+    --accent: #111317;
+    --brand: #6c4cf1;
+    --radius: 11px;
+    font-synthesis: none;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
+  body {
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 12px; color: var(--ink); background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+  }
+  .app { height: 100vh; display: flex; flex-direction: column; }
+
+  /* header, Foundation style: brand left, actions right */
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px; border-bottom: 1px solid var(--line); flex: 0 0 auto;
+  }
+  .brand { display: flex; align-items: center; gap: 8px; }
+  .brand .dot {
+    width: 20px; height: 20px; border-radius: 6px;
+    background: conic-gradient(from 210deg, #ff5f6d, #ffc371, #2bd2a0, #4f8cff, #a35cff, #ff5f6d);
+  }
+  .brand h1 { font-size: 13px; font-weight: 600; margin: 0; letter-spacing: -0.01em; }
+  .hdr-actions { display: flex; align-items: center; gap: 8px; }
+
+  main { flex: 1 1 auto; overflow: hidden; padding: 13px 16px; display: flex; flex-direction: column; gap: 11px; }
+
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field > label, .flabel { font-size: 10.5px; font-weight: 600; color: var(--ink-soft); }
+
+  .colorrow { display: flex; gap: 8px; align-items: center; }
+  .swatchbtn {
+    width: 38px; height: 34px; border-radius: 8px; border: 1px solid var(--line);
+    padding: 0; cursor: pointer; overflow: hidden; position: relative; flex: 0 0 auto;
+  }
+  .swatchbtn input[type=color] {
+    position: absolute; inset: -6px; width: calc(100% + 12px); height: calc(100% + 12px);
+    border: none; padding: 0; cursor: pointer; background: none;
+  }
+  input[type=text] {
+    flex: 1; height: 34px; border: 1px solid var(--line); border-radius: 8px;
+    padding: 0 10px; font-size: 13px; font-family: inherit; color: var(--ink);
+    outline: none; background: var(--bg); min-width: 0;
+  }
+  input[type=text]:focus, select:focus { border-color: #b9bcc4; }
+
+  /* compact OKLCH sliders */
+  .sliders { display: flex; flex-direction: column; gap: 7px; padding: 10px 11px; background: var(--panel); border-radius: var(--radius); border: 1px solid var(--line); }
+  .srow { display: grid; grid-template-columns: 14px 1fr 52px; align-items: center; gap: 9px; }
+  .srow .lk { font-size: 10.5px; font-weight: 700; color: var(--ink-soft); }
+  .srow .val { font-size: 10.5px; color: var(--ink); text-align: right; font-variant-numeric: tabular-nums; }
+  input[type=range] { -webkit-appearance: none; appearance: none; height: 4px; border-radius: 4px; background: var(--line); outline: none; }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none; width: 14px; height: 14px; border-radius: 50%;
+    background: var(--bg); border: 2px solid var(--accent); cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,.18);
+  }
+
+  /* two columns: scale style + name */
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  select {
+    height: 34px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg);
+    padding: 0 28px 0 10px; font-size: 13px; font-family: inherit; color: var(--ink);
+    outline: none; cursor: pointer; width: 100%;
+    -webkit-appearance: none; appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M3 4.5L6 7.5L9 4.5' stroke='%236b6f78' stroke-width='1.3' fill='none' stroke-linecap='round'/></svg>");
+    background-repeat: no-repeat; background-position: right 9px center;
+  }
+
+  .countrow { display: none; align-items: center; gap: 10px; margin-top: 2px; }
+  .countrow.show { display: flex; }
+  .countrow input[type=range] { flex: 1; }
+  .countrow .val { font-size: 12px; font-weight: 600; width: 18px; text-align: right; }
+
+  .preview { border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 11px; background: var(--panel); flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+  .preview .top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; gap: 8px; }
+  .preview .top b { font-size: 12px; font-weight: 600; }
+  .preview .top em { font-style: normal; font-size: 9.5px; color: var(--ink-soft); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .scale { display: flex; gap: 4px; flex: 1 1 auto; min-height: 0; }
+  .cell { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 0; }
+  .cell .chip { width: 100%; flex: 1 1 auto; min-height: 30px; border-radius: 6px; border: 1px solid rgba(0,0,0,.05); position: relative; display: flex; align-items: center; justify-content: center; }
+  .cell .chip.base { box-shadow: 0 0 0 2px var(--accent); }
+  .cell .chip b { font-size: 9px; font-weight: 700; opacity: .9; }
+  .cell label { font-size: 8px; color: var(--ink-soft); white-space: nowrap; }
+  .cell .lvl { font-size: 7px; letter-spacing: .02em; white-space: nowrap; }
+  .lvl.pass { color: #1a9d5a; }
+  .lvl.large { color: #c08a1e; }
+  .lvl.fail { color: #c0432e; }
+
+  footer { flex: 0 0 auto; padding: 11px 16px 10px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 10px; }
+  .footrow { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .opts { display: flex; gap: 14px; }
+  .opt { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 11px; color: var(--ink); white-space: nowrap; }
+  .opt input { width: 14px; height: 14px; accent-color: var(--accent); cursor: pointer; }
+
+  .actions { display: flex; gap: 8px; }
+  button.primary, button.ghost {
+    flex: 1; height: 38px; border-radius: 9px; font-size: 13px; font-weight: 600;
+    font-family: inherit; cursor: pointer; border: 1px solid var(--line);
+  }
+  button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  button.primary:hover { opacity: .92; }
+  button.ghost { background: var(--bg); color: var(--ink); }
+  button.ghost:hover { border-color: #c5c8d0; }
+
+  /* dropdown (export) */
+  .dd { position: relative; }
+  .dd > button.ddbtn {
+    height: 30px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg);
+    color: var(--ink); font-size: 11.5px; font-weight: 600; font-family: inherit; cursor: pointer;
+    padding: 0 10px; display: inline-flex; align-items: center; gap: 6px;
+  }
+  .dd > button.ddbtn:hover { border-color: #c5c8d0; }
+  .dd > button.ddbtn.copied { border-color: #1a9d5a; color: #1a9d5a; }
+  .ddmenu {
+    position: absolute; right: 0; top: calc(100% + 6px); min-width: 170px;
+    background: var(--bg); border: 1px solid var(--line); border-radius: 10px;
+    box-shadow: 0 10px 28px rgba(0,0,0,.16); padding: 5px; z-index: 20; display: none;
+  }
+  .ddmenu.open { display: block; }
+  .ddmenu button {
+    display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 10px;
+    background: none; border: none; border-radius: 7px; padding: 8px 9px; cursor: pointer;
+    font-size: 12px; font-family: inherit; color: var(--ink); text-align: left;
+  }
+  .ddmenu button:hover { background: var(--panel); }
+  .ddmenu button small { color: var(--ink-soft); font-size: 10px; }
+
+  .credit { text-align: center; font-size: 10.5px; color: var(--ink-soft); }
+  .credit a { color: var(--brand); text-decoration: none; font-weight: 600; }
+  .credit a:hover { text-decoration: underline; }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1e1f24; --panel: #26272d; --line: #34363d; --ink: #f2f3f5;
+      --ink-soft: #9a9ea8; --accent: #f2f3f5; --brand: #a78bfa;
+    }
+    button.primary { color: #16181d; }
+    .cell .chip { border-color: rgba(255,255,255,.08); }
+    .lvl.pass { color: #4ed08a; } .lvl.large { color: #e4b659; } .lvl.fail { color: #ec6a54; }
+    .dd > button.ddbtn.copied { color: #4ed08a; border-color: #4ed08a; }
+    select { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M3 4.5L6 7.5L9 4.5' stroke='%239a9ea8' stroke-width='1.3' fill='none' stroke-linecap='round'/></svg>"); }
+  }
+</style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="brand">
+        <div class="dot"></div>
+        <h1>Okra</h1>
+      </div>
+      <div class="hdr-actions">
+        <div class="dd" id="ddExport">
+          <button class="ddbtn" id="ddExportBtn" type="button">Copy
+            <svg width="10" height="10" viewBox="0 0 12 12"><path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.3" fill="none" stroke-linecap="round"/></svg>
+          </button>
+          <div class="ddmenu" id="ddExportMenu">
+            <button type="button" data-exp="css">CSS variables <small>hex</small></button>
+            <button type="button" data-exp="cssok">CSS variables <small>oklch</small></button>
+            <button type="button" data-exp="tw">Tailwind config</button>
+            <button type="button" data-exp="hex">Hex list</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <div class="field">
+        <label>Base color</label>
+        <div class="colorrow">
+          <button class="swatchbtn" id="swatchbtn" type="button">
+            <input type="color" id="picker" value="#1E90FF" />
+          </button>
+          <input type="text" id="hex" value="#1E90FF" spellcheck="false" />
+        </div>
+      </div>
+
+      <div class="sliders">
+        <div class="srow"><span class="lk">L</span><input type="range" id="sL" min="0" max="100" step="0.1" value="65" /><span class="val" id="vL">65%</span></div>
+        <div class="srow"><span class="lk">C</span><input type="range" id="sC" min="0" max="0.4" step="0.001" value="0.19" /><span class="val" id="vC">0.190</span></div>
+        <div class="srow"><span class="lk">H</span><input type="range" id="sH" min="0" max="360" step="0.1" value="253" /><span class="val" id="vH">253</span></div>
+      </div>
+
+      <div class="grid2">
+        <div class="field">
+          <label>Scale style</label>
+          <select id="preset"></select>
+        </div>
+        <div class="field">
+          <label>Palette name</label>
+          <input type="text" id="name" value="Blue" spellcheck="false" />
+        </div>
+      </div>
+      <div class="countrow" id="countrow">
+        <span class="flabel">Colors</span>
+        <input type="range" id="count" min="5" max="14" step="1" value="9" />
+        <span class="val" id="countVal">9</span>
+      </div>
+
+      <div class="preview">
+        <div class="top"><b id="pvName">Blue</b><em id="pvMeta"></em></div>
+        <div class="scale" id="scale"></div>
+      </div>
+    </main>
+
+    <footer>
+      <div class="footrow">
+        <div class="opts">
+          <label class="opt"><input type="checkbox" id="optStyles" checked /> Styles</label>
+          <label class="opt"><input type="checkbox" id="optHex" checked /> Hex labels</label>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="ghost" id="btnStyles" type="button">Styles only</button>
+        <button class="primary" id="btnGen" type="button">Add to canvas</button>
+      </div>
+      <div class="credit">created by <a id="creditLink" href="https://yogfolio.vercel.app" target="_blank" rel="noopener">yog</a></div>
+    </footer>
+  </div>
+
+<script>
+/*
+ * Spectra color engine
+ * OKLCH based palette generation with sRGB gamut mapping.
+ * Pure functions, no DOM. Used by the plugin UI (ui.html).
+ *
+ * Pipeline for every output color:
+ *   OKLCH -> OKLab -> linear sRGB -> (chroma reduce if out of gamut) -> gamma sRGB
+ *
+ * References:
+ *   OKLab/OKLCH by Bjorn Ottosson
+ *   CSS Color 4 gamut mapping (reduce chroma, keep L and H)
+ */
+
+/* ---------- small math helpers ---------- */
+function clamp(v, lo, hi) { return v < lo ? lo : (v > hi ? hi : v); }
+function toRad(deg) { return (deg * Math.PI) / 180; }
+function toDeg(rad) { let d = (rad * 180) / Math.PI; return d < 0 ? d + 360 : d; }
+
+/* ---------- sRGB transfer function ---------- */
+function linearToGamma(c) {
+  // c is linear light 0..1
+  const a = c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(c, 1 / 2.4) - 0.055;
+  return a;
+}
+function gammaToLinear(c) {
+  // c is gamma encoded 0..1
+  return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+}
+
+/* ---------- OKLab <-> linear sRGB ---------- */
+function oklabToLinearSrgb(L, a, b) {
+  const l_ = L + 0.3963377774 * a + 0.2158037573 * b;
+  const m_ = L - 0.1055613458 * a - 0.0638541728 * b;
+  const s_ = L - 0.0894841775 * a - 1.2914855480 * b;
+
+  const l = l_ * l_ * l_;
+  const m = m_ * m_ * m_;
+  const s = s_ * s_ * s_;
+
+  return {
+    r: 4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+    g: -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+    b: -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s,
+  };
+}
+
+function linearSrgbToOklab(r, g, b) {
+  const l = 0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b;
+  const m = 0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b;
+  const s = 0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b;
+
+  const l_ = Math.cbrt(l);
+  const m_ = Math.cbrt(m);
+  const s_ = Math.cbrt(s);
+
+  return {
+    L: 0.2104542553 * l_ + 0.7936177850 * m_ - 0.0040720468 * s_,
+    a: 1.9779984951 * l_ - 2.4285922050 * m_ + 0.4505937099 * s_,
+    b: 0.0259040371 * l_ + 0.7827717662 * m_ - 0.8086757660 * s_,
+  };
+}
+
+/* ---------- OKLCH <-> OKLab ---------- */
+function oklchToOklab(L, C, H) {
+  return { L: L, a: C * Math.cos(toRad(H)), b: C * Math.sin(toRad(H)) };
+}
+function oklabToOklch(L, a, b) {
+  const C = Math.sqrt(a * a + b * b);
+  let H = toDeg(Math.atan2(b, a));
+  return { L: L, C: C, H: H };
+}
+
+/* ---------- gamut check ---------- */
+function inGamut(rgb, eps) {
+  eps = eps === undefined ? 0.00001 : eps;
+  return (
+    rgb.r >= -eps && rgb.r <= 1 + eps &&
+    rgb.g >= -eps && rgb.g <= 1 + eps &&
+    rgb.b >= -eps && rgb.b <= 1 + eps
+  );
+}
+function clipRgb(rgb) {
+  return { r: clamp(rgb.r, 0, 1), g: clamp(rgb.g, 0, 1), b: clamp(rgb.b, 0, 1) };
+}
+
+/*
+ * Map an OKLCH color into the sRGB gamut by reducing chroma while keeping
+ * L and H fixed (CSS Color 4 style). Returns gamma encoded sRGB 0..1.
+ */
+function oklchToSrgb(L, C, H) {
+  L = clamp(L, 0, 1);
+  const lab0 = oklchToOklab(L, C, H);
+  let lin = oklabToLinearSrgb(lab0.L, lab0.a, lab0.b);
+
+  if (!inGamut(lin)) {
+    // binary search the largest in gamut chroma between 0 and C
+    let lo = 0, hi = C, best = 0;
+    for (let i = 0; i < 24; i++) {
+      const mid = (lo + hi) / 2;
+      const lab = oklchToOklab(L, mid, H);
+      const candidate = oklabToLinearSrgb(lab.L, lab.a, lab.b);
+      if (inGamut(candidate, 0.0005)) { best = mid; lo = mid; } else { hi = mid; }
+    }
+    const labBest = oklchToOklab(L, best, H);
+    lin = oklabToLinearSrgb(labBest.L, labBest.a, labBest.b);
+  }
+
+  lin = clipRgb(lin);
+  return {
+    r: linearToGamma(lin.r),
+    g: linearToGamma(lin.g),
+    b: linearToGamma(lin.b),
+  };
+}
+
+/* ---------- hex <-> rgb (gamma, 0..1) ---------- */
+function hexToRgb(hex) {
+  hex = String(hex).trim().replace(/^#/, "");
+  if (hex.length === 3) hex = hex.split("").map(function (c) { return c + c; }).join("");
+  if (hex.length !== 6 || /[^0-9a-fA-F]/.test(hex)) return null;
+  return {
+    r: parseInt(hex.slice(0, 2), 16) / 255,
+    g: parseInt(hex.slice(2, 4), 16) / 255,
+    b: parseInt(hex.slice(4, 6), 16) / 255,
+  };
+}
+function rgbToHex(rgb) {
+  function h(v) {
+    const n = Math.round(clamp(v, 0, 1) * 255);
+    return n.toString(16).padStart(2, "0");
+  }
+  return ("#" + h(rgb.r) + h(rgb.g) + h(rgb.b)).toUpperCase();
+}
+
+/* hex (gamma) -> OKLCH */
+function hexToOklch(hex) {
+  const rgb = hexToRgb(hex);
+  if (!rgb) return null;
+  const lin = { r: gammaToLinear(rgb.r), g: gammaToLinear(rgb.g), b: gammaToLinear(rgb.b) };
+  const lab = linearSrgbToOklab(lin.r, lin.g, lin.b);
+  return oklabToOklch(lab.L, lab.a, lab.b);
+}
+
+/* ---------- scale presets ----------
+ * Each preset defines the stops. For every stop:
+ *   key    -> the label used for the style name and swatch (e.g. "500")
+ *   L      -> target OKLCH lightness 0..1 for that step
+ *   cMul   -> chroma multiplier applied to the base chroma, tapered at the
+ *             extremes so very light / very dark steps stay clean
+ * The base hue is always kept constant (that is the whole point of OKLCH),
+ * and the base chroma comes from the seed color the user picks.
+ */
+
+// Default perceptual scale, Tailwind style 50..950.
+const DEFAULT_SCALE = [
+  { key: "50",  L: 0.971, cMul: 0.22 },
+  { key: "100", L: 0.946, cMul: 0.35 },
+  { key: "200", L: 0.903, cMul: 0.55 },
+  { key: "300", L: 0.842, cMul: 0.75 },
+  { key: "400", L: 0.760, cMul: 0.92 },
+  { key: "500", L: 0.680, cMul: 1.00 },
+  { key: "600", L: 0.600, cMul: 1.00 },
+  { key: "700", L: 0.515, cMul: 0.92 },
+  { key: "800", L: 0.440, cMul: 0.80 },
+  { key: "900", L: 0.378, cMul: 0.68 },
+  { key: "950", L: 0.285, cMul: 0.52 },
+];
+
+// Material 3 inspired tonal scale (tones 0..100, lighter = higher tone).
+const MATERIAL_SCALE = [
+  { key: "0",   L: 0.000, cMul: 0.00 },
+  { key: "10",  L: 0.240, cMul: 0.55 },
+  { key: "20",  L: 0.330, cMul: 0.80 },
+  { key: "30",  L: 0.420, cMul: 0.95 },
+  { key: "40",  L: 0.505, cMul: 1.00 },
+  { key: "50",  L: 0.590, cMul: 1.00 },
+  { key: "60",  L: 0.670, cMul: 0.98 },
+  { key: "70",  L: 0.760, cMul: 0.88 },
+  { key: "80",  L: 0.838, cMul: 0.72 },
+  { key: "90",  L: 0.910, cMul: 0.50 },
+  { key: "95",  L: 0.952, cMul: 0.34 },
+  { key: "99",  L: 0.985, cMul: 0.14 },
+  { key: "100", L: 1.000, cMul: 0.00 },
+];
+
+// iOS / Apple inspired. Fewer, cleaner steps, light tints to deep shades.
+const IOS_SCALE = [
+  { key: "50",  L: 0.968, cMul: 0.20 },
+  { key: "100", L: 0.930, cMul: 0.38 },
+  { key: "200", L: 0.878, cMul: 0.60 },
+  { key: "300", L: 0.806, cMul: 0.82 },
+  { key: "400", L: 0.724, cMul: 0.95 },
+  { key: "500", L: 0.642, cMul: 1.00 }, // base, close to Apple system colors
+  { key: "600", L: 0.560, cMul: 0.98 },
+  { key: "700", L: 0.472, cMul: 0.88 },
+  { key: "800", L: 0.392, cMul: 0.74 },
+  { key: "900", L: 0.318, cMul: 0.58 },
+];
+
+// Ant Design inspired, 10 steps, light at top (1) to dark (10).
+const ANT_SCALE = [
+  { key: "1",  L: 0.974, cMul: 0.18 },
+  { key: "2",  L: 0.942, cMul: 0.34 },
+  { key: "3",  L: 0.898, cMul: 0.54 },
+  { key: "4",  L: 0.836, cMul: 0.74 },
+  { key: "5",  L: 0.762, cMul: 0.90 },
+  { key: "6",  L: 0.668, cMul: 1.00 }, // primary
+  { key: "7",  L: 0.572, cMul: 0.96 },
+  { key: "8",  L: 0.476, cMul: 0.84 },
+  { key: "9",  L: 0.388, cMul: 0.68 },
+  { key: "10", L: 0.300, cMul: 0.52 },
+];
+
+// Atlassian inspired tokens, 0..1000 in hundreds.
+const ATLAS_SCALE = [
+  { key: "0",    L: 0.985, cMul: 0.10 },
+  { key: "50",   L: 0.962, cMul: 0.22 },
+  { key: "100",  L: 0.928, cMul: 0.40 },
+  { key: "200",  L: 0.878, cMul: 0.62 },
+  { key: "300",  L: 0.806, cMul: 0.82 },
+  { key: "400",  L: 0.726, cMul: 0.94 },
+  { key: "500",  L: 0.648, cMul: 1.00 },
+  { key: "600",  L: 0.566, cMul: 0.96 },
+  { key: "700",  L: 0.486, cMul: 0.86 },
+  { key: "800",  L: 0.408, cMul: 0.72 },
+  { key: "900",  L: 0.336, cMul: 0.58 },
+  { key: "1000", L: 0.268, cMul: 0.46 },
+];
+
+// Orbit (Kiwi.com) inspired, named steps.
+const ORBIT_SCALE = [
+  { key: "light",   L: 0.956, cMul: 0.26 },
+  { key: "lighter", L: 0.900, cMul: 0.52 },
+  { key: "normal",  L: 0.642, cMul: 1.00 }, // base
+  { key: "dark",    L: 0.512, cMul: 0.90 },
+  { key: "darker",  L: 0.408, cMul: 0.72 },
+  { key: "darkest", L: 0.318, cMul: 0.56 },
+];
+
+/*
+ * Custom scale with an adjustable number of colors (like the "Number of
+ * Colors" control on oklch.fyi/create). Lightness is spread evenly from a
+ * light tint to a deep shade, and chroma is tapered so the ends stay clean
+ * and the middle carries the most intensity. The step whose lightness is
+ * closest to the base lightness is marked as the base.
+ */
+function buildCustomScale(n, baseL) {
+  n = Math.max(3, Math.min(20, Math.round(n || 9)));
+  const Ltop = 0.97, Lbot = 0.24;
+  const stops = [];
+  let baseIdx = 0, baseDiff = 999;
+  for (let i = 0; i < n; i++) {
+    const t = n === 1 ? 0 : i / (n - 1);          // 0 light .. 1 dark
+    const L = Ltop - t * (Ltop - Lbot);
+    // symmetric taper, low at both ends, peak in the middle
+    const cMul = Math.max(0.18, 1 - 0.8 * Math.pow(Math.abs(2 * t - 1), 1.6));
+    const key = i === 0 ? "50" : String(i * 100);
+    stops.push({ key: key, L: L, cMul: cMul });
+    if (baseL != null) {
+      const d = Math.abs(L - baseL);
+      if (d < baseDiff) { baseDiff = d; baseIdx = i; }
+    }
+  }
+  return { stops: stops, baseKey: stops[baseIdx] ? stops[baseIdx].key : "500" };
+}
+
+const PRESETS = {
+  default:  { label: "Default",          baseKey: "500",    scale: DEFAULT_SCALE },
+  material: { label: "Material",         baseKey: "40",     scale: MATERIAL_SCALE },
+  ios:      { label: "iOS",              baseKey: "500",    scale: IOS_SCALE },
+  ant:      { label: "Ant Design",       baseKey: "6",      scale: ANT_SCALE },
+  atlas:    { label: "Atlassian",        baseKey: "500",    scale: ATLAS_SCALE },
+  orbit:    { label: "Orbit",            baseKey: "normal", scale: ORBIT_SCALE },
+  custom:   { label: "Custom",           baseKey: "500",    scale: null, custom: true },
+};
+
+/* ---------- auto color naming ----------
+ * Picks a human color name from the hue and chroma. Low chroma -> neutral
+ * family (gray/slate/stone). Otherwise nearest named hue bucket.
+ */
+const HUE_NAMES = [
+  { name: "Red",     h: 25 },
+  { name: "Orange",  h: 55 },
+  { name: "Amber",   h: 75 },
+  { name: "Yellow",  h: 95 },
+  { name: "Lime",    h: 120 },
+  { name: "Green",   h: 145 },
+  { name: "Emerald", h: 160 },
+  { name: "Teal",    h: 185 },
+  { name: "Cyan",    h: 210 },
+  { name: "Sky",     h: 235 },
+  { name: "Blue",    h: 262 },
+  { name: "Indigo",  h: 280 },
+  { name: "Violet",  h: 300 },
+  { name: "Purple",  h: 320 },
+  { name: "Fuchsia", h: 338 },
+  { name: "Pink",    h: 355 },
+];
+
+function autoColorName(oklch) {
+  if (!oklch) return "Color";
+  // near grayscale
+  if (oklch.C < 0.03) {
+    if (oklch.L > 0.85) return "Gray";
+    if (oklch.L < 0.25) return "Charcoal";
+    // a touch of hue tints the neutral family
+    if (oklch.H >= 200 && oklch.H <= 290) return "Slate";
+    if (oklch.H >= 60 && oklch.H <= 110) return "Stone";
+    return "Neutral";
+  }
+  // find nearest hue bucket on the circle
+  let best = HUE_NAMES[0], bestD = 999;
+  for (let i = 0; i < HUE_NAMES.length; i++) {
+    let d = Math.abs(oklch.H - HUE_NAMES[i].h);
+    if (d > 180) d = 360 - d;
+    if (d < bestD) { bestD = d; best = HUE_NAMES[i]; }
+  }
+  return best.name;
+}
+
+/* ---------- WCAG 2 contrast ---------- */
+function relLuminance(rgb) {
+  function lin(c) { return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); }
+  return 0.2126 * lin(rgb.r) + 0.7152 * lin(rgb.g) + 0.0722 * lin(rgb.b);
+}
+function contrastRatio(rgbA, rgbB) {
+  const la = relLuminance(rgbA), lb = relLuminance(rgbB);
+  const hi = Math.max(la, lb), lo = Math.min(la, lb);
+  return (hi + 0.05) / (lo + 0.05);
+}
+// best readable text (black or white) on a swatch, with ratio and WCAG level
+function stepContrast(rgb) {
+  const white = { r: 1, g: 1, b: 1 }, black = { r: 0, g: 0, b: 0 };
+  const cw = contrastRatio(rgb, white), cb = contrastRatio(rgb, black);
+  const on = cw >= cb ? "white" : "black";
+  const best = Math.max(cw, cb);
+  return {
+    white: Math.round(cw * 100) / 100,
+    black: Math.round(cb * 100) / 100,
+    best: Math.round(best * 100) / 100,
+    on: on,
+    level: best >= 7 ? "AAA" : best >= 4.5 ? "AA" : best >= 3 ? "AA Large" : "Fail",
+  };
+}
+
+/* ---------- format an OKLCH string ---------- */
+function formatOklch(L, C, H) {
+  const l = Math.round(L * 1000) / 10;      // percent, 1 decimal
+  const c = Math.round(C * 1000) / 1000;
+  const h = Math.round(H * 10) / 10;
+  return "oklch(" + l + "% " + c + " " + h + ")";
+}
+
+/* ---------- generate a full palette ---------- */
+/*
+ * base     : { L, C, H } OKLCH base (chroma is the intended, pre gamut value)
+ * presetId : key into PRESETS
+ * count    : only used when presetId === "custom"
+ * returns  : { presetLabel, baseKey, steps: [...] }
+ */
+function generatePaletteOklch(base, presetId, count) {
+  let preset = PRESETS[presetId] || PRESETS.default;
+  const baseChroma = base.C;
+  const hue = base.H;
+
+  let scale = preset.scale;
+  let baseKey = preset.baseKey;
+  if (preset.custom) {
+    const built = buildCustomScale(count, base.L);
+    scale = built.stops;
+    baseKey = built.baseKey;
+  }
+
+  const steps = scale.map(function (stop) {
+    const C = baseChroma * stop.cMul;
+    const rgb = oklchToSrgb(stop.L, C, hue);
+    return {
+      key: stop.key,
+      hex: rgbToHex(rgb),
+      rgb: rgb,
+      oklch: formatOklch(stop.L, C, hue),
+      L: Math.round(stop.L * 1000) / 1000,
+      C: Math.round(C * 1000) / 1000,
+      H: Math.round(hue * 10) / 10,
+      contrast: stepContrast(rgb),
+      isBase: stop.key === baseKey,
+    };
+  });
+
+  return {
+    presetId: presetId,
+    presetLabel: preset.label,
+    baseKey: baseKey,
+    steps: steps,
+  };
+}
+
+// hex convenience wrapper (kept for back compat)
+function generatePalette(seedHex, presetId, count) {
+  const seed = hexToOklch(seedHex);
+  if (!seed) return null;
+  return generatePaletteOklch(seed, presetId, count);
+}
+
+/* ---------- exporters ---------- */
+function slugify(name) {
+  return String(name || "color").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "color";
+}
+function exportCssVars(name, steps) {
+  const slug = slugify(name);
+  return steps.map(function (s) { return "  --" + slug + "-" + s.key + ": " + s.hex + ";"; }).join("\n");
+}
+function exportCssVarsOklch(name, steps) {
+  const slug = slugify(name);
+  return steps.map(function (s) { return "  --" + slug + "-" + s.key + ": " + s.oklch + ";"; }).join("\n");
+}
+function exportTailwind(name, steps) {
+  const slug = slugify(name);
+  const body = steps.map(function (s) { return "    '" + s.key + "': '" + s.hex + "',"; }).join("\n");
+  return slug + ": {\n" + body + "\n},";
+}
+function exportHexList(steps) {
+  return steps.map(function (s) { return s.key + "\t" + s.hex; }).join("\n");
+}
+
+/* Export for both module and global (plugin UI) use. */
+const SpectraColor = {
+  oklchToSrgb: oklchToSrgb,
+  hexToOklch: hexToOklch,
+  hexToRgb: hexToRgb,
+  rgbToHex: rgbToHex,
+  autoColorName: autoColorName,
+  generatePalette: generatePalette,
+  generatePaletteOklch: generatePaletteOklch,
+  contrastRatio: contrastRatio,
+  stepContrast: stepContrast,
+  formatOklch: formatOklch,
+  exportCssVars: exportCssVars,
+  exportCssVarsOklch: exportCssVarsOklch,
+  exportTailwind: exportTailwind,
+  exportHexList: exportHexList,
+  slugify: slugify,
+  PRESETS: PRESETS,
+};
+
+if (typeof module !== "undefined" && module.exports) { module.exports = SpectraColor; }
+if (typeof window !== "undefined") { window.SpectraColor = SpectraColor; }
+
+
+(function () {
+  var S = window.SpectraColor;
+  var el = function (id) { return document.getElementById(id); };
+
+  var start = S.hexToOklch("#1E90FF");
+  var state = { base: { L: start.L, C: start.C, H: start.H }, preset: "default", count: 9, nameEdited: false };
+
+  var picker = el("picker"), hexInput = el("hex"), nameInput = el("name"), presetSel = el("preset");
+  var scaleEl = el("scale"), pvName = el("pvName"), pvMeta = el("pvMeta"), swatchbtn = el("swatchbtn");
+  var sL = el("sL"), sC = el("sC"), sH = el("sH"), vL = el("vL"), vC = el("vC"), vH = el("vH");
+  var countrow = el("countrow"), count = el("count"), countVal = el("countVal");
+
+  // populate scale style dropdown
+  var order = ["default", "material", "ios", "ant", "atlas", "orbit", "custom"];
+  order.forEach(function (id) {
+    var p = S.PRESETS[id];
+    var o = document.createElement("option");
+    o.value = id;
+    o.textContent = p.label.replace("Spectra ", "") + (p.custom ? "" : "  (" + p.scale.length + ")");
+    presetSel.appendChild(o);
+  });
+  presetSel.value = state.preset;
+  presetSel.addEventListener("change", function () {
+    state.preset = presetSel.value;
+    countrow.classList.toggle("show", state.preset === "custom");
+    render();
+  });
+
+  function isValidHex(v) { return /^#?[0-9a-fA-F]{6}$/.test(v) || /^#?[0-9a-fA-F]{3}$/.test(v); }
+  function normHex(v) { v = v.trim(); if (v[0] !== "#") v = "#" + v; if (v.length === 4) v = "#" + v[1]+v[1]+v[2]+v[2]+v[3]+v[3]; return v.toUpperCase(); }
+  function baseHex() { return S.rgbToHex(S.oklchToSrgb(state.base.L, state.base.C, state.base.H)); }
+
+  function syncControlsFromBase() {
+    var hx = baseHex();
+    picker.value = hx; hexInput.value = hx; swatchbtn.style.background = hx;
+    sL.value = (state.base.L * 100).toFixed(1); sC.value = state.base.C.toFixed(3); sH.value = state.base.H.toFixed(1);
+    vL.textContent = Math.round(state.base.L * 100) + "%"; vC.textContent = state.base.C.toFixed(3); vH.textContent = Math.round(state.base.H);
+  }
+
+  function pickInk(rgb) {
+    function lin(c){return c<=0.03928?c/12.92:Math.pow((c+0.055)/1.055,2.4);}
+    var L = 0.2126*lin(rgb.r)+0.7152*lin(rgb.g)+0.0722*lin(rgb.b);
+    return L > 0.5 ? "rgba(0,0,0,.65)" : "rgba(255,255,255,.85)";
+  }
+
+  var lastPal = null;
+  function render() {
+    var pal = S.generatePaletteOklch(state.base, state.preset, state.count);
+    if (!pal) return;
+    lastPal = pal;
+
+    if (!state.nameEdited) nameInput.value = S.autoColorName(state.base);
+    pvName.textContent = nameInput.value || "Color";
+    pvMeta.textContent = pal.presetLabel + "  -  " + S.formatOklch(state.base.L, state.base.C, state.base.H);
+
+    scaleEl.innerHTML = "";
+    pal.steps.forEach(function (s) {
+      var cell = document.createElement("div"); cell.className = "cell";
+      var chip = document.createElement("div");
+      chip.className = "chip" + (s.isBase ? " base" : "");
+      chip.style.background = s.hex;
+      chip.title = s.key + "  " + s.hex + "  (" + s.oklch + ")  contrast " + s.contrast.best + " " + s.contrast.level;
+      var mark = document.createElement("b"); mark.style.color = pickInk(s.rgb); mark.textContent = s.isBase ? "*" : "";
+      chip.appendChild(mark);
+      var lab = document.createElement("label"); lab.textContent = s.key;
+      var lvl = document.createElement("span");
+      var lv = s.contrast.level;
+      lvl.className = "lvl " + (lv === "AAA" || lv === "AA" ? "pass" : lv === "AA Large" ? "large" : "fail");
+      lvl.textContent = lv === "AA Large" ? "AA L" : lv;
+      cell.appendChild(chip); cell.appendChild(lab); cell.appendChild(lvl);
+      scaleEl.appendChild(cell);
+    });
+  }
+
+  function setBaseFromHex(hx) {
+    var o = S.hexToOklch(hx); if (!o) return;
+    state.base = { L: o.L, C: o.C, H: o.H };
+    syncControlsFromBase(); render();
+  }
+  picker.addEventListener("input", function () { setBaseFromHex(picker.value); });
+  hexInput.addEventListener("input", function () { if (isValidHex(hexInput.value)) setBaseFromHex(normHex(hexInput.value)); });
+
+  function sliderChanged() {
+    state.base = { L: parseFloat(sL.value) / 100, C: parseFloat(sC.value), H: parseFloat(sH.value) };
+    var hx = baseHex();
+    picker.value = hx; hexInput.value = hx; swatchbtn.style.background = hx;
+    vL.textContent = Math.round(state.base.L * 100) + "%"; vC.textContent = state.base.C.toFixed(3); vH.textContent = Math.round(state.base.H);
+    render();
+  }
+  sL.addEventListener("input", sliderChanged);
+  sC.addEventListener("input", sliderChanged);
+  sH.addEventListener("input", sliderChanged);
+
+  count.addEventListener("input", function () { state.count = parseInt(count.value, 10); countVal.textContent = state.count; render(); });
+  nameInput.addEventListener("input", function () { state.nameEdited = true; render(); });
+
+  /* ---- export dropdown ---- */
+  var ddBtn = el("ddExportBtn"), ddMenu = el("ddExportMenu");
+  ddBtn.addEventListener("click", function (e) { e.stopPropagation(); ddMenu.classList.toggle("open"); });
+  document.addEventListener("click", function () { ddMenu.classList.remove("open"); });
+  ddMenu.addEventListener("click", function (e) { e.stopPropagation(); });
+
+  function copyText(str) {
+    try {
+      var ta = document.createElement("textarea");
+      ta.value = str; ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.focus(); ta.select();
+      var ok = document.execCommand("copy"); document.body.removeChild(ta);
+      if (ok) return true;
+    } catch (e) {}
+    if (navigator.clipboard) { navigator.clipboard.writeText(str).catch(function(){}); return true; }
+    return false;
+  }
+  function flashCopied() {
+    ddBtn.classList.add("copied");
+    var svg = ddBtn.querySelector("svg"); if (svg) svg.style.display = "none";
+    ddBtn.childNodes[0].nodeValue = "Copied ";
+    setTimeout(function () {
+      ddBtn.classList.remove("copied");
+      ddBtn.childNodes[0].nodeValue = "Copy ";
+      if (svg) svg.style.display = "";
+    }, 1100);
+  }
+  ddMenu.querySelectorAll("button").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var name = nameInput.value || "Color", steps = lastPal.steps, out = "";
+      var kind = b.dataset.exp;
+      if (kind === "css") out = ":root {\n" + S.exportCssVars(name, steps) + "\n}";
+      else if (kind === "cssok") out = ":root {\n" + S.exportCssVarsOklch(name, steps) + "\n}";
+      else if (kind === "tw") out = S.exportTailwind(name, steps);
+      else out = S.exportHexList(steps);
+      copyText(out); flashCopied(); ddMenu.classList.remove("open");
+    });
+  });
+
+  /* ---- portfolio link, iframe safe ---- */
+  el("creditLink").addEventListener("click", function (e) {
+    e.preventDefault();
+    try { window.open("https://yogfolio.vercel.app", "_blank"); } catch (err) {}
+    parent.postMessage({ pluginMessage: { type: "open-url", url: "https://yogfolio.vercel.app" } }, "*");
+  });
+
+  /* ---- send to Figma ---- */
+  function currentPayload(withStyles) {
+    return {
+      colorName: (nameInput.value || "Color").trim(),
+      presetLabel: lastPal.presetLabel,
+      baseKey: lastPal.baseKey,
+      steps: lastPal.steps.map(function (s) { return { key: s.key, hex: s.hex, rgb: s.rgb, isBase: s.isBase }; }),
+      createStyles: !!(withStyles && el("optStyles").checked),
+      showHex: el("optHex").checked,
+    };
+  }
+  function send(type, payload) { parent.postMessage({ pluginMessage: { type: type, payload: payload } }, "*"); }
+  el("btnGen").addEventListener("click", function () { send("generate", currentPayload(true)); });
+  el("btnStyles").addEventListener("click", function () { send("styles-only", currentPayload(false)); });
+
+  syncControlsFromBase();
+  render();
+})();
+</script>
+</body>
+</html>
