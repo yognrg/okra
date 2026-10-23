@@ -166,21 +166,18 @@ const DEFAULT_SCALE = [
   { key: "950", L: 0.285, cMul: 0.52 },
 ];
 
-// Material 3 inspired tonal scale (tones 0..100, lighter = higher tone).
+// Material inspired numbered palette, 10 steps 50..900, base 500.
 const MATERIAL_SCALE = [
-  { key: "0",   L: 0.000, cMul: 0.00 },
-  { key: "10",  L: 0.240, cMul: 0.55 },
-  { key: "20",  L: 0.330, cMul: 0.80 },
-  { key: "30",  L: 0.420, cMul: 0.95 },
-  { key: "40",  L: 0.505, cMul: 1.00 },
-  { key: "50",  L: 0.590, cMul: 1.00 },
-  { key: "60",  L: 0.670, cMul: 0.98 },
-  { key: "70",  L: 0.760, cMul: 0.88 },
-  { key: "80",  L: 0.838, cMul: 0.72 },
-  { key: "90",  L: 0.910, cMul: 0.50 },
-  { key: "95",  L: 0.952, cMul: 0.34 },
-  { key: "99",  L: 0.985, cMul: 0.14 },
-  { key: "100", L: 1.000, cMul: 0.00 },
+  { key: "50",  L: 0.964, cMul: 0.20 },
+  { key: "100", L: 0.932, cMul: 0.38 },
+  { key: "200", L: 0.882, cMul: 0.58 },
+  { key: "300", L: 0.818, cMul: 0.78 },
+  { key: "400", L: 0.752, cMul: 0.92 },
+  { key: "500", L: 0.680, cMul: 1.00 }, // primary
+  { key: "600", L: 0.608, cMul: 1.00 },
+  { key: "700", L: 0.528, cMul: 0.92 },
+  { key: "800", L: 0.448, cMul: 0.80 },
+  { key: "900", L: 0.360, cMul: 0.64 },
 ];
 
 // iOS / Apple inspired. Fewer, cleaner steps, light tints to deep shades.
@@ -211,30 +208,29 @@ const ANT_SCALE = [
   { key: "10", L: 0.300, cMul: 0.52 },
 ];
 
-// Atlassian inspired tokens, 0..1000 in hundreds.
+// Atlassian inspired tokens, 7 steps 50,75,100,200,300,400,500. Base 400.
 const ATLAS_SCALE = [
-  { key: "0",    L: 0.985, cMul: 0.10 },
-  { key: "50",   L: 0.962, cMul: 0.22 },
-  { key: "100",  L: 0.928, cMul: 0.40 },
-  { key: "200",  L: 0.878, cMul: 0.62 },
-  { key: "300",  L: 0.806, cMul: 0.82 },
-  { key: "400",  L: 0.726, cMul: 0.94 },
-  { key: "500",  L: 0.648, cMul: 1.00 },
-  { key: "600",  L: 0.566, cMul: 0.96 },
-  { key: "700",  L: 0.486, cMul: 0.86 },
-  { key: "800",  L: 0.408, cMul: 0.72 },
-  { key: "900",  L: 0.336, cMul: 0.58 },
-  { key: "1000", L: 0.268, cMul: 0.46 },
+  { key: "50",  L: 0.960, cMul: 0.22 },
+  { key: "75",  L: 0.918, cMul: 0.40 },
+  { key: "100", L: 0.872, cMul: 0.60 },
+  { key: "200", L: 0.796, cMul: 0.82 },
+  { key: "300", L: 0.702, cMul: 0.95 },
+  { key: "400", L: 0.600, cMul: 1.00 }, // primary
+  { key: "500", L: 0.480, cMul: 0.88 },
 ];
 
-// Orbit (Kiwi.com) inspired, named steps.
+// Orbit (Kiwi.com) inspired, 10 tones with interaction states. Base normal.
 const ORBIT_SCALE = [
-  { key: "light",   L: 0.956, cMul: 0.26 },
-  { key: "lighter", L: 0.900, cMul: 0.52 },
-  { key: "normal",  L: 0.642, cMul: 1.00 }, // base
-  { key: "dark",    L: 0.512, cMul: 0.90 },
-  { key: "darker",  L: 0.408, cMul: 0.72 },
-  { key: "darkest", L: 0.318, cMul: 0.56 },
+  { key: "light",         L: 0.955, cMul: 0.22 },
+  { key: "light-hover",   L: 0.928, cMul: 0.30 },
+  { key: "light-active",  L: 0.898, cMul: 0.40 },
+  { key: "normal",        L: 0.640, cMul: 1.00 }, // base
+  { key: "normal-hover",  L: 0.590, cMul: 1.00 },
+  { key: "normal-active", L: 0.545, cMul: 0.98 },
+  { key: "dark",          L: 0.500, cMul: 0.92 },
+  { key: "dark-hover",    L: 0.458, cMul: 0.86 },
+  { key: "dark-active",   L: 0.418, cMul: 0.80 },
+  { key: "darker",        L: 0.368, cMul: 0.70 },
 ];
 
 /*
@@ -266,10 +262,10 @@ function buildCustomScale(n, baseL) {
 
 const PRESETS = {
   default:  { label: "Default",          baseKey: "500",    scale: DEFAULT_SCALE },
-  material: { label: "Material",         baseKey: "40",     scale: MATERIAL_SCALE },
+  material: { label: "Material",         baseKey: "500",    scale: MATERIAL_SCALE },
   ios:      { label: "iOS",              baseKey: "500",    scale: IOS_SCALE },
   ant:      { label: "Ant Design",       baseKey: "6",      scale: ANT_SCALE },
-  atlas:    { label: "Atlassian",        baseKey: "500",    scale: ATLAS_SCALE },
+  atlas:    { label: "Atlassian",        baseKey: "400",    scale: ATLAS_SCALE },
   orbit:    { label: "Orbit",            baseKey: "normal", scale: ORBIT_SCALE },
   custom:   { label: "Custom",           baseKey: "500",    scale: null, custom: true },
 };
