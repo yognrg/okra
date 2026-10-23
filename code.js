@@ -42,53 +42,43 @@ function makeText(chars, opts) {
 
 /* ---------- build one swatch ---------- */
 /*
- * A swatch is a vertical auto-layout card:
- *   [ color block with step key top-left ]
- *   [ hex value underneath ]
+ * A swatch is a full width horizontal bar, stacked vertically in the card:
+ *   [ step key (left) .......... hex (right) ]   on the shade color
+ * Label colors flip to stay readable on light and dark shades.
  */
 function buildSwatch(step, colorName, showHex) {
-  const SW = 128;         // swatch width
-  const BLOCK_H = 96;     // color block height
+  const BAR_W = 320;      // bar width
+  const BAR_H = 52;       // bar height
 
-  const card = figma.createFrame();
-  card.name = colorName + " / " + step.key + (step.isBase ? " (base)" : "");
-  card.layoutMode = "VERTICAL";
-  card.primaryAxisSizingMode = "AUTO";
-  card.counterAxisSizingMode = "FIXED";
-  card.resize(SW, card.height);
-  card.itemSpacing = 8;
-  card.fills = [];
-
-  // color block
-  const block = figma.createFrame();
-  block.name = "swatch";
-  block.layoutMode = "VERTICAL";
-  block.primaryAxisSizingMode = "FIXED";
-  block.counterAxisSizingMode = "FIXED";
-  block.resize(SW, BLOCK_H);
-  block.cornerRadius = 12;
-  block.fills = solid(step.rgb);
-  block.paddingLeft = 10;
-  block.paddingTop = 10;
-  block.paddingRight = 10;
-  block.paddingBottom = 10;
-  block.clipsContent = true;
+  const bar = figma.createFrame();
+  bar.name = colorName + " / " + step.key + (step.isBase ? " (base)" : "");
+  bar.layoutMode = "HORIZONTAL";
+  bar.primaryAxisSizingMode = "FIXED";
+  bar.counterAxisSizingMode = "FIXED";
+  bar.resize(BAR_W, BAR_H);
+  bar.primaryAxisAlignItems = "SPACE_BETWEEN";
+  bar.counterAxisAlignItems = "CENTER";
+  bar.paddingLeft = 16;
+  bar.paddingRight = 16;
+  bar.cornerRadius = 10;
+  bar.fills = solid(step.rgb);
+  if (step.isBase) {
+    bar.strokes = solid({ r: 0.08, g: 0.08, b: 0.1 });
+    bar.strokeWeight = 2;
+  }
 
   const lblCol = labelColor(step.rgb);
   const keyText = makeText(step.key + (step.isBase ? "  *" : ""), {
     style: "Semi Bold", size: 13, color: lblCol,
   });
-  block.appendChild(keyText);
-  card.appendChild(block);
+  bar.appendChild(keyText);
 
-  // labels under the block
   if (showHex) {
-    const hexText = makeText(step.hex, { style: "Medium", size: 11, width: SW });
-    hexText.fills = solid({ r: 0.4, g: 0.4, b: 0.43 });
-    card.appendChild(hexText);
+    const hexText = makeText(step.hex, { style: "Medium", size: 12, color: lblCol });
+    bar.appendChild(hexText);
   }
 
-  return card;
+  return bar;
 }
 
 /* ---------- build the full palette card ---------- */
@@ -126,19 +116,19 @@ function buildPaletteCard(payload) {
   header.appendChild(sub);
   outer.appendChild(header);
 
-  // row of swatches
-  const row = figma.createFrame();
-  row.name = "swatches";
-  row.layoutMode = "HORIZONTAL";
-  row.primaryAxisSizingMode = "AUTO";
-  row.counterAxisSizingMode = "AUTO";
-  row.counterAxisAlignItems = "MIN";
-  row.itemSpacing = 12;
-  row.fills = [];
+  // vertical stack of swatch bars
+  const col = figma.createFrame();
+  col.name = "swatches";
+  col.layoutMode = "VERTICAL";
+  col.primaryAxisSizingMode = "AUTO";
+  col.counterAxisSizingMode = "AUTO";
+  col.counterAxisAlignItems = "MIN";
+  col.itemSpacing = 8;
+  col.fills = [];
   steps.forEach(function (step) {
-    row.appendChild(buildSwatch(step, colorName, showHex));
+    col.appendChild(buildSwatch(step, colorName, showHex));
   });
-  outer.appendChild(row);
+  outer.appendChild(col);
 
   return outer;
 }
