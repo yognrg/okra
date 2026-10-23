@@ -8,6 +8,10 @@ Build perceptually even color scales that stay true to your hue, drop them on th
 
 Pick a color. Pick a scale. Ship a palette.
 
+<br />
+
+<img src="docs/demo.gif" alt="Okra generating an OKLCH palette: sweeping the hue while every shade keeps the same lightness, then switching scale styles and exporting" width="400" />
+
 </div>
 
 ---
