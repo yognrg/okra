@@ -65,7 +65,7 @@ A gamut is the range of colors a screen can actually show. sRGB is the web defau
 ## Features
 
 - **Three ways to set the base color**: color picker, hex input, or OKLCH L, C, H sliders
-- **Seven scale styles** from a dropdown: Default, Material, iOS, Ant Design, Atlassian, Orbit, and a Custom scale where you choose the number of colors
+- **Scale styles** from a dropdown: Tailwind, Material, Ant Design, Atlassian, Semantic, and a Custom scale where you choose the number of colors
 - **Auto naming**: the palette is named from its hue (Blue, Emerald, Violet), and you are free to rename it
 - **Live preview** of every shade with the base step marked
 - **WCAG 2 contrast badge** on each shade, so you know what passes AA or AAA before you use it
