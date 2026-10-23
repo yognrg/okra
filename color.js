@@ -382,6 +382,116 @@ function generatePalette(seedHex, presetId, count) {
   return generatePaletteOklch(seed, presetId, count);
 }
 
+/* ---------- accessible theme generator ----------
+ * From a primary OKLCH color, derive a light theme and a dark theme whose
+ * roles meet WCAG. Aims for AAA (7:1) on text, with AA (4.5:1) as the floor.
+ */
+
+// Scan OKLCH lightness (at fixed hue/chroma) for the first value meeting the
+// target contrast against ref, starting from the light or dark edge so the
+// change from the edge is minimal. Returns { L, ratio }.
+function _solveL(hue, chroma, ref, target, wantDarker) {
+  const step = 0.004;
+  if (wantDarker) {
+    for (let L = 0.99; L >= 0; L -= step) {
+      const c = contrastRatio(oklchToSrgb(L, chroma, hue), ref);
+      if (c >= target) return { L: L, ratio: c };
+    }
+    return { L: 0, ratio: contrastRatio(oklchToSrgb(0, chroma, hue), ref) };
+  }
+  for (let L = 0.01; L <= 1; L += step) {
+    const c = contrastRatio(oklchToSrgb(L, chroma, hue), ref);
+    if (c >= target) return { L: L, ratio: c };
+  }
+  return { L: 1, ratio: contrastRatio(oklchToSrgb(1, chroma, hue), ref) };
+}
+// text color: try AAA, fall back to AA, else best available
+function _solveText(hue, chroma, ref, wantDarker) {
+  let r = _solveL(hue, chroma, ref, 7, wantDarker);
+  if (r.ratio >= 7) { r.level = "AAA"; return r; }
+  r = _solveL(hue, chroma, ref, 4.5, wantDarker);
+  r.level = r.ratio >= 4.5 ? "AA" : (r.ratio >= 3 ? "AA Large" : "Fail");
+  return r;
+}
+
+function _role(name, L, C, H) {
+  const rgb = oklchToSrgb(L, C, H);
+  return { name: name, rgb: rgb, hex: rgbToHex(rgb), oklch: formatOklch(L, C, H), L: L, C: C, H: H };
+}
+
+function generateTheme(base) {
+  const hue = base.H;
+  const C = base.C;
+  const tintLight = Math.min(C * 0.03, 0.012);
+  const tintDark = Math.min(C * 0.06, 0.02);
+  const textC = Math.min(C, 0.04);
+  const white = { r: 1, g: 1, b: 1 }, black = { r: 0, g: 0, b: 0 };
+
+  /* ----- light ----- */
+  const Lbg = _role("Background", 0.99, tintLight, hue);
+  const Lsurf = _role("Surface", 0.965, tintLight, hue);
+  const Ltext = (function () { const r = _solveText(hue, textC, Lbg.rgb, true); const x = _role("Text", r.L, textC, hue); x.level = r.level; x.ratio = r.ratio; return x; })();
+  const Lmuted = (function () { const r = _solveL(hue, textC, Lbg.rgb, 4.5, true); const x = _role("Text Muted", r.L, textC, hue); x.ratio = r.ratio; return x; })();
+
+  let Lprimary, LonPrimary, primaryAdjusted = false;
+  const primRgb = oklchToSrgb(base.L, C, hue);
+  const cW = contrastRatio(primRgb, white), cB = contrastRatio(primRgb, black);
+  if (cW >= 4.5) { Lprimary = _role("Primary", base.L, C, hue); LonPrimary = _role("On Primary", 1, 0, hue); }
+  else if (cB >= 4.5) { Lprimary = _role("Primary", base.L, C, hue); LonPrimary = _role("On Primary", 0, 0, hue); }
+  else { const r = _solveL(hue, C, white, 4.5, true); Lprimary = _role("Primary", r.L, C, hue); LonPrimary = _role("On Primary", 1, 0, hue); primaryAdjusted = true; }
+  const LprimaryRatio = contrastRatio(LonPrimary.rgb, Lprimary.rgb);
+  const Lborder = (function () { const r = _solveL(hue, tintLight, Lbg.rgb, 1.35, true); return _role("Border", r.L, tintLight, hue); })();
+
+  /* ----- dark ----- */
+  const Dbg = _role("Background", 0.18, tintDark, hue);
+  const Dsurf = _role("Surface", 0.235, tintDark, hue);
+  const Dtext = (function () { const r = _solveText(hue, textC, Dbg.rgb, false); const x = _role("Text", r.L, textC, hue); x.level = r.level; x.ratio = r.ratio; return x; })();
+  const Dmuted = (function () { const r = _solveL(hue, textC, Dbg.rgb, 4.5, false); const x = _role("Text Muted", r.L, textC, hue); x.ratio = r.ratio; return x; })();
+
+  // dark primary: lighter, calmer tone of the hue, then ensure it clears the bg
+  let pdL = 0.78, pdC = C * 0.9;
+  if (contrastRatio(oklchToSrgb(pdL, pdC, hue), Dbg.rgb) < 4.5) {
+    const r = _solveL(hue, pdC, Dbg.rgb, 4.5, false);
+    pdL = Math.max(r.L, pdL);
+  }
+  const Dprimary = _role("Primary", pdL, pdC, hue);
+  const DonPrimary = (function () { const r = _solveL(hue, textC, Dprimary.rgb, 4.5, true); return _role("On Primary", r.L, textC, hue); })();
+  const DprimaryRatio = contrastRatio(DonPrimary.rgb, Dprimary.rgb);
+  const Dborder = (function () { const r = _solveL(hue, tintDark, Dbg.rgb, 1.35, false); return _role("Border", r.L, tintDark, hue); })();
+
+  function level(ratio) { return ratio >= 7 ? "AAA" : ratio >= 4.5 ? "AA" : ratio >= 3 ? "AA Large" : "Fail"; }
+
+  return {
+    primaryAdjusted: primaryAdjusted,
+    light: {
+      background: Lbg, surface: Lsurf, primary: Lprimary, onPrimary: LonPrimary,
+      text: Ltext, textMuted: Lmuted, border: Lborder,
+      textRatio: Math.round(Ltext.ratio * 100) / 100, textLevel: Ltext.level,
+      primaryRatio: Math.round(LprimaryRatio * 100) / 100, primaryLevel: level(LprimaryRatio),
+    },
+    dark: {
+      background: Dbg, surface: Dsurf, primary: Dprimary, onPrimary: DonPrimary,
+      text: Dtext, textMuted: Dmuted, border: Dborder,
+      textRatio: Math.round(Dtext.ratio * 100) / 100, textLevel: Dtext.level,
+      primaryRatio: Math.round(DprimaryRatio * 100) / 100, primaryLevel: level(DprimaryRatio),
+    },
+  };
+}
+
+// Flatten a theme into the variable payload the backend writes (one row per
+// role, with a Light and a Dark value).
+function themeToVariables(theme) {
+  const order = ["background", "surface", "primary", "onPrimary", "text", "textMuted", "border"];
+  const names = { background: "Background", surface: "Surface", primary: "Primary", onPrimary: "On Primary", text: "Text", textMuted: "Text Muted", border: "Border" };
+  return order.map(function (k) {
+    return {
+      name: names[k],
+      light: { rgb: theme.light[k].rgb, oklch: theme.light[k].oklch, hex: theme.light[k].hex },
+      dark: { rgb: theme.dark[k].rgb, oklch: theme.dark[k].oklch, hex: theme.dark[k].hex },
+    };
+  });
+}
+
 /* ---------- exporters ---------- */
 function slugify(name) {
   return String(name || "color").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "color";
@@ -508,6 +618,8 @@ const SpectraColor = {
   slugify: slugify,
   baseToString: baseToString,
   stringToBase: stringToBase,
+  generateTheme: generateTheme,
+  themeToVariables: themeToVariables,
   PRESETS: PRESETS,
 };
 

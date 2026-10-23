@@ -80,6 +80,28 @@
   }
   .fmt { width: 84px; flex: 0 0 auto; font-size: 11px; font-weight: 600; padding: 0 22px 0 9px; background-position: right 7px center; }
 
+  .tabs { display: flex; gap: 3px; background: var(--panel); border: 1px solid var(--line); border-radius: 9px; padding: 3px; }
+  .tab { flex: 1; height: 28px; border: none; background: none; border-radius: 6px; font-family: inherit; font-size: 12px; font-weight: 600; color: var(--ink-soft); cursor: pointer; }
+  .tab.active { background: var(--bg); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+
+  /* theme view */
+  #scaleView { display: flex; flex-direction: column; gap: 11px; flex: 1 1 auto; min-height: 0; }
+  #themeView { display: flex; flex-direction: column; gap: 9px; }
+  .tnote { font-size: 10.5px; color: var(--ink-soft); line-height: 1.4; }
+  .tnote.adj { color: #c08a1e; }
+  .themewrap { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .tcard { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--panel); }
+  .tcard .th { font-size: 11px; font-weight: 700; padding: 9px 11px 0; }
+  .mock { margin: 9px; border-radius: 10px; padding: 11px; }
+  .mock .card { border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 5px; }
+  .mock .aa { font-size: 16px; font-weight: 700; line-height: 1; }
+  .mock .sub { font-size: 9.5px; line-height: 1.2; }
+  .mock .btn { align-self: flex-start; margin-top: 3px; border-radius: 7px; padding: 5px 11px; font-size: 10px; font-weight: 700; }
+  .troles { display: flex; gap: 3px; padding: 0 9px 7px; }
+  .troles .rc { flex: 1; height: 15px; border-radius: 4px; border: 1px solid rgba(0,0,0,.08); }
+  .tbadges { display: flex; gap: 8px; padding: 0 11px 10px; flex-wrap: wrap; }
+  .tbadges .lvl { font-size: 9px; }
+
   .countrow { display: none; align-items: center; gap: 10px; margin-top: 2px; }
   .countrow.show { display: flex; }
   .countrow input[type=range] { flex: 1; }
@@ -201,38 +223,57 @@
         <div class="srow"><span class="lk">H</span><input type="range" id="sH" min="0" max="360" step="0.1" value="253" /><span class="val" id="vH">253</span></div>
       </div>
 
-      <div class="grid2">
-        <div class="field">
-          <label>Scale style <span style="font-weight:400;color:var(--brand)">· OKLCH</span></label>
-          <select id="preset"></select>
-        </div>
-        <div class="field">
-          <label>Palette name</label>
-          <input type="text" id="name" value="Blue" spellcheck="false" />
-        </div>
-      </div>
-      <div class="countrow" id="countrow">
-        <span class="flabel">Colors</span>
-        <input type="range" id="count" min="5" max="14" step="1" value="9" />
-        <span class="val" id="countVal">9</span>
+      <div class="tabs">
+        <button class="tab active" id="tabScale" type="button" data-tab="scale">Scale</button>
+        <button class="tab" id="tabTheme" type="button" data-tab="theme">Theme</button>
       </div>
 
-      <div class="preview">
-        <div class="top"><b id="pvName">Blue</b><em id="pvMeta"></em></div>
-        <div class="scale" id="scale"></div>
+      <div id="scaleView">
+        <div class="grid2">
+          <div class="field">
+            <label>Scale style <span style="font-weight:400;color:var(--brand)">· OKLCH</span></label>
+            <select id="preset"></select>
+          </div>
+          <div class="field">
+            <label>Palette name</label>
+            <input type="text" id="name" value="Blue" spellcheck="false" />
+          </div>
+        </div>
+        <div class="countrow" id="countrow">
+          <span class="flabel">Colors</span>
+          <input type="range" id="count" min="5" max="14" step="1" value="9" />
+          <span class="val" id="countVal">9</span>
+        </div>
+
+        <div class="preview">
+          <div class="top"><b id="pvName">Blue</b><em id="pvMeta"></em></div>
+          <div class="scale" id="scale"></div>
+        </div>
+      </div>
+
+      <div id="themeView" style="display:none;">
+        <div class="tnote" id="tnote">Accessible light and dark themes from this color as primary.</div>
+        <div class="themewrap" id="themeCards"></div>
       </div>
     </main>
 
     <footer>
-      <div class="footrow">
-        <div class="opts">
-          <label class="opt"><input type="checkbox" id="optStyles" checked /> Styles</label>
-          <label class="opt"><input type="checkbox" id="optHex" checked /> Hex labels</label>
+      <div id="scaleFoot">
+        <div class="footrow">
+          <div class="opts">
+            <label class="opt"><input type="checkbox" id="optStyles" checked /> Styles</label>
+            <label class="opt"><input type="checkbox" id="optHex" checked /> Hex labels</label>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="ghost" id="btnStyles" type="button">Styles only</button>
+          <button class="primary" id="btnGen" type="button">Add to canvas</button>
         </div>
       </div>
-      <div class="actions">
-        <button class="ghost" id="btnStyles" type="button">Styles only</button>
-        <button class="primary" id="btnGen" type="button">Add to canvas</button>
+      <div id="themeFoot" style="display:none;">
+        <div class="actions">
+          <button class="primary" id="btnTheme" type="button" style="flex:1">Create theme variables</button>
+        </div>
       </div>
       <div class="credit">created by <a id="creditLink" href="https://yogfolio.vercel.app" target="_blank" rel="noopener">yog</a></div>
     </footer>
@@ -623,6 +664,116 @@ function generatePalette(seedHex, presetId, count) {
   return generatePaletteOklch(seed, presetId, count);
 }
 
+/* ---------- accessible theme generator ----------
+ * From a primary OKLCH color, derive a light theme and a dark theme whose
+ * roles meet WCAG. Aims for AAA (7:1) on text, with AA (4.5:1) as the floor.
+ */
+
+// Scan OKLCH lightness (at fixed hue/chroma) for the first value meeting the
+// target contrast against ref, starting from the light or dark edge so the
+// change from the edge is minimal. Returns { L, ratio }.
+function _solveL(hue, chroma, ref, target, wantDarker) {
+  const step = 0.004;
+  if (wantDarker) {
+    for (let L = 0.99; L >= 0; L -= step) {
+      const c = contrastRatio(oklchToSrgb(L, chroma, hue), ref);
+      if (c >= target) return { L: L, ratio: c };
+    }
+    return { L: 0, ratio: contrastRatio(oklchToSrgb(0, chroma, hue), ref) };
+  }
+  for (let L = 0.01; L <= 1; L += step) {
+    const c = contrastRatio(oklchToSrgb(L, chroma, hue), ref);
+    if (c >= target) return { L: L, ratio: c };
+  }
+  return { L: 1, ratio: contrastRatio(oklchToSrgb(1, chroma, hue), ref) };
+}
+// text color: try AAA, fall back to AA, else best available
+function _solveText(hue, chroma, ref, wantDarker) {
+  let r = _solveL(hue, chroma, ref, 7, wantDarker);
+  if (r.ratio >= 7) { r.level = "AAA"; return r; }
+  r = _solveL(hue, chroma, ref, 4.5, wantDarker);
+  r.level = r.ratio >= 4.5 ? "AA" : (r.ratio >= 3 ? "AA Large" : "Fail");
+  return r;
+}
+
+function _role(name, L, C, H) {
+  const rgb = oklchToSrgb(L, C, H);
+  return { name: name, rgb: rgb, hex: rgbToHex(rgb), oklch: formatOklch(L, C, H), L: L, C: C, H: H };
+}
+
+function generateTheme(base) {
+  const hue = base.H;
+  const C = base.C;
+  const tintLight = Math.min(C * 0.03, 0.012);
+  const tintDark = Math.min(C * 0.06, 0.02);
+  const textC = Math.min(C, 0.04);
+  const white = { r: 1, g: 1, b: 1 }, black = { r: 0, g: 0, b: 0 };
+
+  /* ----- light ----- */
+  const Lbg = _role("Background", 0.99, tintLight, hue);
+  const Lsurf = _role("Surface", 0.965, tintLight, hue);
+  const Ltext = (function () { const r = _solveText(hue, textC, Lbg.rgb, true); const x = _role("Text", r.L, textC, hue); x.level = r.level; x.ratio = r.ratio; return x; })();
+  const Lmuted = (function () { const r = _solveL(hue, textC, Lbg.rgb, 4.5, true); const x = _role("Text Muted", r.L, textC, hue); x.ratio = r.ratio; return x; })();
+
+  let Lprimary, LonPrimary, primaryAdjusted = false;
+  const primRgb = oklchToSrgb(base.L, C, hue);
+  const cW = contrastRatio(primRgb, white), cB = contrastRatio(primRgb, black);
+  if (cW >= 4.5) { Lprimary = _role("Primary", base.L, C, hue); LonPrimary = _role("On Primary", 1, 0, hue); }
+  else if (cB >= 4.5) { Lprimary = _role("Primary", base.L, C, hue); LonPrimary = _role("On Primary", 0, 0, hue); }
+  else { const r = _solveL(hue, C, white, 4.5, true); Lprimary = _role("Primary", r.L, C, hue); LonPrimary = _role("On Primary", 1, 0, hue); primaryAdjusted = true; }
+  const LprimaryRatio = contrastRatio(LonPrimary.rgb, Lprimary.rgb);
+  const Lborder = (function () { const r = _solveL(hue, tintLight, Lbg.rgb, 1.35, true); return _role("Border", r.L, tintLight, hue); })();
+
+  /* ----- dark ----- */
+  const Dbg = _role("Background", 0.18, tintDark, hue);
+  const Dsurf = _role("Surface", 0.235, tintDark, hue);
+  const Dtext = (function () { const r = _solveText(hue, textC, Dbg.rgb, false); const x = _role("Text", r.L, textC, hue); x.level = r.level; x.ratio = r.ratio; return x; })();
+  const Dmuted = (function () { const r = _solveL(hue, textC, Dbg.rgb, 4.5, false); const x = _role("Text Muted", r.L, textC, hue); x.ratio = r.ratio; return x; })();
+
+  // dark primary: lighter, calmer tone of the hue, then ensure it clears the bg
+  let pdL = 0.78, pdC = C * 0.9;
+  if (contrastRatio(oklchToSrgb(pdL, pdC, hue), Dbg.rgb) < 4.5) {
+    const r = _solveL(hue, pdC, Dbg.rgb, 4.5, false);
+    pdL = Math.max(r.L, pdL);
+  }
+  const Dprimary = _role("Primary", pdL, pdC, hue);
+  const DonPrimary = (function () { const r = _solveL(hue, textC, Dprimary.rgb, 4.5, true); return _role("On Primary", r.L, textC, hue); })();
+  const DprimaryRatio = contrastRatio(DonPrimary.rgb, Dprimary.rgb);
+  const Dborder = (function () { const r = _solveL(hue, tintDark, Dbg.rgb, 1.35, false); return _role("Border", r.L, tintDark, hue); })();
+
+  function level(ratio) { return ratio >= 7 ? "AAA" : ratio >= 4.5 ? "AA" : ratio >= 3 ? "AA Large" : "Fail"; }
+
+  return {
+    primaryAdjusted: primaryAdjusted,
+    light: {
+      background: Lbg, surface: Lsurf, primary: Lprimary, onPrimary: LonPrimary,
+      text: Ltext, textMuted: Lmuted, border: Lborder,
+      textRatio: Math.round(Ltext.ratio * 100) / 100, textLevel: Ltext.level,
+      primaryRatio: Math.round(LprimaryRatio * 100) / 100, primaryLevel: level(LprimaryRatio),
+    },
+    dark: {
+      background: Dbg, surface: Dsurf, primary: Dprimary, onPrimary: DonPrimary,
+      text: Dtext, textMuted: Dmuted, border: Dborder,
+      textRatio: Math.round(Dtext.ratio * 100) / 100, textLevel: Dtext.level,
+      primaryRatio: Math.round(DprimaryRatio * 100) / 100, primaryLevel: level(DprimaryRatio),
+    },
+  };
+}
+
+// Flatten a theme into the variable payload the backend writes (one row per
+// role, with a Light and a Dark value).
+function themeToVariables(theme) {
+  const order = ["background", "surface", "primary", "onPrimary", "text", "textMuted", "border"];
+  const names = { background: "Background", surface: "Surface", primary: "Primary", onPrimary: "On Primary", text: "Text", textMuted: "Text Muted", border: "Border" };
+  return order.map(function (k) {
+    return {
+      name: names[k],
+      light: { rgb: theme.light[k].rgb, oklch: theme.light[k].oklch, hex: theme.light[k].hex },
+      dark: { rgb: theme.dark[k].rgb, oklch: theme.dark[k].oklch, hex: theme.dark[k].hex },
+    };
+  });
+}
+
 /* ---------- exporters ---------- */
 function slugify(name) {
   return String(name || "color").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "color";
@@ -749,6 +900,8 @@ const SpectraColor = {
   slugify: slugify,
   baseToString: baseToString,
   stringToBase: stringToBase,
+  generateTheme: generateTheme,
+  themeToVariables: themeToVariables,
   PRESETS: PRESETS,
 };
 
@@ -767,6 +920,11 @@ if (typeof window !== "undefined") { window.SpectraColor = SpectraColor; }
   var scaleEl = el("scale"), pvName = el("pvName"), pvMeta = el("pvMeta"), swatchbtn = el("swatchbtn");
   var sL = el("sL"), sC = el("sC"), sH = el("sH"), vL = el("vL"), vC = el("vC"), vH = el("vH");
   var countrow = el("countrow"), count = el("count"), countVal = el("countVal");
+  var tabScale = el("tabScale"), tabTheme = el("tabTheme");
+  var scaleView = el("scaleView"), themeView = el("themeView");
+  var scaleFoot = el("scaleFoot"), themeFoot = el("themeFoot");
+  var themeCards = el("themeCards"), tnote = el("tnote");
+  var activeTab = "scale";
 
   // populate scale style dropdown
   var order = ["default", "material", "ant", "atlas", "semantic", "custom"];
@@ -797,6 +955,7 @@ if (typeof window !== "undefined") { window.SpectraColor = SpectraColor; }
     vL.textContent = Math.round(state.base.L * 100) + "%"; vC.textContent = state.base.C.toFixed(3); vH.textContent = Math.round(state.base.H);
     if (!skipText) hexInput.value = S.baseToString(state.base, mode);
     render();
+    if (activeTab === "theme") renderTheme();
   }
   function syncControlsFromBase() { applyBase(false); }
 
@@ -902,6 +1061,71 @@ if (typeof window !== "undefined") { window.SpectraColor = SpectraColor; }
       else out = S.exportHexList(steps);
       copyText(out); flashCopied(); ddMenu.classList.remove("open");
     });
+  });
+
+  /* ---- theme tab ---- */
+  var lastTheme = null;
+
+  function badge(text, level) {
+    var s = document.createElement("span");
+    s.className = "lvl " + (level === "AAA" || level === "AA" ? "pass" : level === "AA Large" ? "large" : "fail");
+    s.textContent = text;
+    return s;
+  }
+  function buildThemeCard(side, label) {
+    var c = document.createElement("div"); c.className = "tcard";
+    var th = document.createElement("div"); th.className = "th"; th.textContent = label; th.style.color = "var(--ink)"; c.appendChild(th);
+
+    var mock = document.createElement("div"); mock.className = "mock"; mock.style.background = side.background.hex;
+    var card = document.createElement("div"); card.className = "card";
+    card.style.background = side.surface.hex; card.style.border = "1px solid " + side.border.hex;
+    var aa = document.createElement("div"); aa.className = "aa"; aa.textContent = "Aa"; aa.style.color = side.text.hex;
+    var sub = document.createElement("div"); sub.className = "sub"; sub.textContent = "Muted caption text"; sub.style.color = side.textMuted.hex;
+    var btn = document.createElement("div"); btn.className = "btn"; btn.textContent = "Button"; btn.style.background = side.primary.hex; btn.style.color = side.onPrimary.hex;
+    card.appendChild(aa); card.appendChild(sub); card.appendChild(btn);
+    mock.appendChild(card); c.appendChild(mock);
+
+    var roles = ["background", "surface", "primary", "onPrimary", "text", "textMuted", "border"];
+    var rr = document.createElement("div"); rr.className = "troles";
+    roles.forEach(function (k) {
+      var rc = document.createElement("div"); rc.className = "rc"; rc.style.background = side[k].hex;
+      rc.title = side[k].name + "   " + side[k].hex + "   " + side[k].oklch;
+      rr.appendChild(rc);
+    });
+    c.appendChild(rr);
+
+    var b = document.createElement("div"); b.className = "tbadges";
+    b.appendChild(badge("Text " + side.textRatio + " " + side.textLevel, side.textLevel));
+    b.appendChild(badge("Primary " + side.primaryRatio + " " + side.primaryLevel, side.primaryLevel));
+    c.appendChild(b);
+    return c;
+  }
+  function renderTheme() {
+    var t = S.generateTheme(state.base); lastTheme = t;
+    themeCards.innerHTML = "";
+    themeCards.appendChild(buildThemeCard(t.light, "Light"));
+    themeCards.appendChild(buildThemeCard(t.dark, "Dark"));
+    if (t.primaryAdjusted) { tnote.textContent = "Primary was darkened in light mode so text on it passes contrast."; tnote.classList.add("adj"); }
+    else { tnote.textContent = "Accessible light and dark themes from this color as primary."; tnote.classList.remove("adj"); }
+  }
+
+  function setTab(t) {
+    activeTab = t;
+    scaleView.style.display = t === "scale" ? "" : "none";
+    themeView.style.display = t === "theme" ? "" : "none";
+    scaleFoot.style.display = t === "scale" ? "" : "none";
+    themeFoot.style.display = t === "theme" ? "" : "none";
+    tabScale.classList.toggle("active", t === "scale");
+    tabTheme.classList.toggle("active", t === "theme");
+    parent.postMessage({ pluginMessage: { type: "resize", h: t === "theme" ? 588 : 660 } }, "*");
+    if (t === "theme") renderTheme();
+  }
+  tabScale.addEventListener("click", function () { setTab("scale"); });
+  tabTheme.addEventListener("click", function () { setTab("theme"); });
+
+  el("btnTheme").addEventListener("click", function () {
+    if (!lastTheme) renderTheme();
+    parent.postMessage({ pluginMessage: { type: "create-theme-vars", variables: S.themeToVariables(lastTheme) } }, "*");
   });
 
   /* ---- portfolio link, iframe safe ---- */

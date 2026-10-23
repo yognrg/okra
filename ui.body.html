@@ -80,6 +80,28 @@
   }
   .fmt { width: 84px; flex: 0 0 auto; font-size: 11px; font-weight: 600; padding: 0 22px 0 9px; background-position: right 7px center; }
 
+  .tabs { display: flex; gap: 3px; background: var(--panel); border: 1px solid var(--line); border-radius: 9px; padding: 3px; }
+  .tab { flex: 1; height: 28px; border: none; background: none; border-radius: 6px; font-family: inherit; font-size: 12px; font-weight: 600; color: var(--ink-soft); cursor: pointer; }
+  .tab.active { background: var(--bg); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+
+  /* theme view */
+  #scaleView { display: flex; flex-direction: column; gap: 11px; flex: 1 1 auto; min-height: 0; }
+  #themeView { display: flex; flex-direction: column; gap: 9px; }
+  .tnote { font-size: 10.5px; color: var(--ink-soft); line-height: 1.4; }
+  .tnote.adj { color: #c08a1e; }
+  .themewrap { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .tcard { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--panel); }
+  .tcard .th { font-size: 11px; font-weight: 700; padding: 9px 11px 0; }
+  .mock { margin: 9px; border-radius: 10px; padding: 11px; }
+  .mock .card { border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 5px; }
+  .mock .aa { font-size: 16px; font-weight: 700; line-height: 1; }
+  .mock .sub { font-size: 9.5px; line-height: 1.2; }
+  .mock .btn { align-self: flex-start; margin-top: 3px; border-radius: 7px; padding: 5px 11px; font-size: 10px; font-weight: 700; }
+  .troles { display: flex; gap: 3px; padding: 0 9px 7px; }
+  .troles .rc { flex: 1; height: 15px; border-radius: 4px; border: 1px solid rgba(0,0,0,.08); }
+  .tbadges { display: flex; gap: 8px; padding: 0 11px 10px; flex-wrap: wrap; }
+  .tbadges .lvl { font-size: 9px; }
+
   .countrow { display: none; align-items: center; gap: 10px; margin-top: 2px; }
   .countrow.show { display: flex; }
   .countrow input[type=range] { flex: 1; }
@@ -201,38 +223,57 @@
         <div class="srow"><span class="lk">H</span><input type="range" id="sH" min="0" max="360" step="0.1" value="253" /><span class="val" id="vH">253</span></div>
       </div>
 
-      <div class="grid2">
-        <div class="field">
-          <label>Scale style <span style="font-weight:400;color:var(--brand)">· OKLCH</span></label>
-          <select id="preset"></select>
-        </div>
-        <div class="field">
-          <label>Palette name</label>
-          <input type="text" id="name" value="Blue" spellcheck="false" />
-        </div>
-      </div>
-      <div class="countrow" id="countrow">
-        <span class="flabel">Colors</span>
-        <input type="range" id="count" min="5" max="14" step="1" value="9" />
-        <span class="val" id="countVal">9</span>
+      <div class="tabs">
+        <button class="tab active" id="tabScale" type="button" data-tab="scale">Scale</button>
+        <button class="tab" id="tabTheme" type="button" data-tab="theme">Theme</button>
       </div>
 
-      <div class="preview">
-        <div class="top"><b id="pvName">Blue</b><em id="pvMeta"></em></div>
-        <div class="scale" id="scale"></div>
+      <div id="scaleView">
+        <div class="grid2">
+          <div class="field">
+            <label>Scale style <span style="font-weight:400;color:var(--brand)">· OKLCH</span></label>
+            <select id="preset"></select>
+          </div>
+          <div class="field">
+            <label>Palette name</label>
+            <input type="text" id="name" value="Blue" spellcheck="false" />
+          </div>
+        </div>
+        <div class="countrow" id="countrow">
+          <span class="flabel">Colors</span>
+          <input type="range" id="count" min="5" max="14" step="1" value="9" />
+          <span class="val" id="countVal">9</span>
+        </div>
+
+        <div class="preview">
+          <div class="top"><b id="pvName">Blue</b><em id="pvMeta"></em></div>
+          <div class="scale" id="scale"></div>
+        </div>
+      </div>
+
+      <div id="themeView" style="display:none;">
+        <div class="tnote" id="tnote">Accessible light and dark themes from this color as primary.</div>
+        <div class="themewrap" id="themeCards"></div>
       </div>
     </main>
 
     <footer>
-      <div class="footrow">
-        <div class="opts">
-          <label class="opt"><input type="checkbox" id="optStyles" checked /> Styles</label>
-          <label class="opt"><input type="checkbox" id="optHex" checked /> Hex labels</label>
+      <div id="scaleFoot">
+        <div class="footrow">
+          <div class="opts">
+            <label class="opt"><input type="checkbox" id="optStyles" checked /> Styles</label>
+            <label class="opt"><input type="checkbox" id="optHex" checked /> Hex labels</label>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="ghost" id="btnStyles" type="button">Styles only</button>
+          <button class="primary" id="btnGen" type="button">Add to canvas</button>
         </div>
       </div>
-      <div class="actions">
-        <button class="ghost" id="btnStyles" type="button">Styles only</button>
-        <button class="primary" id="btnGen" type="button">Add to canvas</button>
+      <div id="themeFoot" style="display:none;">
+        <div class="actions">
+          <button class="primary" id="btnTheme" type="button" style="flex:1">Create theme variables</button>
+        </div>
       </div>
       <div class="credit">created by <a id="creditLink" href="https://yogfolio.vercel.app" target="_blank" rel="noopener">yog</a></div>
     </footer>
@@ -252,6 +293,11 @@
   var scaleEl = el("scale"), pvName = el("pvName"), pvMeta = el("pvMeta"), swatchbtn = el("swatchbtn");
   var sL = el("sL"), sC = el("sC"), sH = el("sH"), vL = el("vL"), vC = el("vC"), vH = el("vH");
   var countrow = el("countrow"), count = el("count"), countVal = el("countVal");
+  var tabScale = el("tabScale"), tabTheme = el("tabTheme");
+  var scaleView = el("scaleView"), themeView = el("themeView");
+  var scaleFoot = el("scaleFoot"), themeFoot = el("themeFoot");
+  var themeCards = el("themeCards"), tnote = el("tnote");
+  var activeTab = "scale";
 
   // populate scale style dropdown
   var order = ["default", "material", "ant", "atlas", "semantic", "custom"];
@@ -282,6 +328,7 @@
     vL.textContent = Math.round(state.base.L * 100) + "%"; vC.textContent = state.base.C.toFixed(3); vH.textContent = Math.round(state.base.H);
     if (!skipText) hexInput.value = S.baseToString(state.base, mode);
     render();
+    if (activeTab === "theme") renderTheme();
   }
   function syncControlsFromBase() { applyBase(false); }
 
@@ -387,6 +434,71 @@
       else out = S.exportHexList(steps);
       copyText(out); flashCopied(); ddMenu.classList.remove("open");
     });
+  });
+
+  /* ---- theme tab ---- */
+  var lastTheme = null;
+
+  function badge(text, level) {
+    var s = document.createElement("span");
+    s.className = "lvl " + (level === "AAA" || level === "AA" ? "pass" : level === "AA Large" ? "large" : "fail");
+    s.textContent = text;
+    return s;
+  }
+  function buildThemeCard(side, label) {
+    var c = document.createElement("div"); c.className = "tcard";
+    var th = document.createElement("div"); th.className = "th"; th.textContent = label; th.style.color = "var(--ink)"; c.appendChild(th);
+
+    var mock = document.createElement("div"); mock.className = "mock"; mock.style.background = side.background.hex;
+    var card = document.createElement("div"); card.className = "card";
+    card.style.background = side.surface.hex; card.style.border = "1px solid " + side.border.hex;
+    var aa = document.createElement("div"); aa.className = "aa"; aa.textContent = "Aa"; aa.style.color = side.text.hex;
+    var sub = document.createElement("div"); sub.className = "sub"; sub.textContent = "Muted caption text"; sub.style.color = side.textMuted.hex;
+    var btn = document.createElement("div"); btn.className = "btn"; btn.textContent = "Button"; btn.style.background = side.primary.hex; btn.style.color = side.onPrimary.hex;
+    card.appendChild(aa); card.appendChild(sub); card.appendChild(btn);
+    mock.appendChild(card); c.appendChild(mock);
+
+    var roles = ["background", "surface", "primary", "onPrimary", "text", "textMuted", "border"];
+    var rr = document.createElement("div"); rr.className = "troles";
+    roles.forEach(function (k) {
+      var rc = document.createElement("div"); rc.className = "rc"; rc.style.background = side[k].hex;
+      rc.title = side[k].name + "   " + side[k].hex + "   " + side[k].oklch;
+      rr.appendChild(rc);
+    });
+    c.appendChild(rr);
+
+    var b = document.createElement("div"); b.className = "tbadges";
+    b.appendChild(badge("Text " + side.textRatio + " " + side.textLevel, side.textLevel));
+    b.appendChild(badge("Primary " + side.primaryRatio + " " + side.primaryLevel, side.primaryLevel));
+    c.appendChild(b);
+    return c;
+  }
+  function renderTheme() {
+    var t = S.generateTheme(state.base); lastTheme = t;
+    themeCards.innerHTML = "";
+    themeCards.appendChild(buildThemeCard(t.light, "Light"));
+    themeCards.appendChild(buildThemeCard(t.dark, "Dark"));
+    if (t.primaryAdjusted) { tnote.textContent = "Primary was darkened in light mode so text on it passes contrast."; tnote.classList.add("adj"); }
+    else { tnote.textContent = "Accessible light and dark themes from this color as primary."; tnote.classList.remove("adj"); }
+  }
+
+  function setTab(t) {
+    activeTab = t;
+    scaleView.style.display = t === "scale" ? "" : "none";
+    themeView.style.display = t === "theme" ? "" : "none";
+    scaleFoot.style.display = t === "scale" ? "" : "none";
+    themeFoot.style.display = t === "theme" ? "" : "none";
+    tabScale.classList.toggle("active", t === "scale");
+    tabTheme.classList.toggle("active", t === "theme");
+    parent.postMessage({ pluginMessage: { type: "resize", h: t === "theme" ? 588 : 660 } }, "*");
+    if (t === "theme") renderTheme();
+  }
+  tabScale.addEventListener("click", function () { setTab("scale"); });
+  tabTheme.addEventListener("click", function () { setTab("theme"); });
+
+  el("btnTheme").addEventListener("click", function () {
+    if (!lastTheme) renderTheme();
+    parent.postMessage({ pluginMessage: { type: "create-theme-vars", variables: S.themeToVariables(lastTheme) } }, "*");
   });
 
   /* ---- portfolio link, iframe safe ---- */

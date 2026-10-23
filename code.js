@@ -158,6 +158,81 @@ async function createStyles(payload) {
   return made;
 }
 
+/* ---------- create theme as variables with Light + Dark modes ----------
+ * Falls back to grouped paint styles when the plan does not allow a second
+ * mode (Figma Starter is limited to one mode per collection).
+ */
+async function createThemeVariables(variables) {
+  try {
+    const n = await makeThemeVariables(variables);
+    return { kind: "variables", made: n };
+  } catch (e) {
+    const n = await makeThemeStyles(variables);
+    return { kind: "styles", made: n };
+  }
+}
+
+async function makeThemeVariables(variables) {
+  const collections = await figma.variables.getLocalVariableCollectionsAsync();
+  let col = null;
+  for (let i = 0; i < collections.length; i++) {
+    if (collections[i].name === "Okra Theme") { col = collections[i]; break; }
+  }
+
+  let lightModeId, darkModeId, createdNew = false;
+  if (!col) {
+    col = figma.variables.createVariableCollection("Okra Theme");
+    createdNew = true;
+    lightModeId = col.modes[0].modeId;
+    col.renameMode(lightModeId, "Light");
+    try { darkModeId = col.addMode("Dark"); }
+    catch (e) { col.remove(); throw e; } // mode limit, roll back the empty collection
+  } else {
+    let lm = null, dm = null;
+    for (let i = 0; i < col.modes.length; i++) {
+      if (col.modes[i].name === "Light") lm = col.modes[i];
+      if (col.modes[i].name === "Dark") dm = col.modes[i];
+    }
+    lightModeId = lm ? lm.modeId : col.modes[0].modeId;
+    darkModeId = dm ? dm.modeId : col.addMode("Dark");
+  }
+
+  const allVars = await figma.variables.getLocalVariablesAsync("COLOR");
+  const byName = {};
+  allVars.forEach(function (v) { if (v.variableCollectionId === col.id) byName[v.name] = v; });
+
+  let made = 0;
+  variables.forEach(function (vr) {
+    let v = byName[vr.name];
+    if (!v) { v = figma.variables.createVariable(vr.name, col, "COLOR"); }
+    v.setValueForMode(lightModeId, { r: vr.light.rgb.r, g: vr.light.rgb.g, b: vr.light.rgb.b });
+    v.setValueForMode(darkModeId, { r: vr.dark.rgb.r, g: vr.dark.rgb.g, b: vr.dark.rgb.b });
+    v.description = "Light " + vr.light.oklch + "   ·   Dark " + vr.dark.oklch;
+    made++;
+  });
+  return made;
+}
+
+async function makeThemeStyles(variables) {
+  const existing = {};
+  const local = await figma.getLocalPaintStylesAsync();
+  local.forEach(function (s) { existing[s.name] = s; });
+
+  let made = 0;
+  function put(name, side) {
+    let style = existing[name];
+    if (!style) { style = figma.createPaintStyle(); style.name = name; }
+    style.paints = solid(side.rgb);
+    style.description = side.oklch;
+    made++;
+  }
+  variables.forEach(function (vr) {
+    put("Theme/Light/" + vr.name, vr.light);
+    put("Theme/Dark/" + vr.name, vr.dark);
+  });
+  return made;
+}
+
 /* ---------- message handling ---------- */
 figma.ui.onmessage = async function (msg) {
   try {
@@ -184,6 +259,20 @@ figma.ui.onmessage = async function (msg) {
     if (msg.type === "styles-only") {
       const n = await createStyles(msg.payload);
       figma.notify(n + " paint styles created");
+      figma.ui.postMessage({ type: "done" });
+    }
+
+    if (msg.type === "resize") {
+      figma.ui.resize(400, Math.round(msg.h) || 660);
+    }
+
+    if (msg.type === "create-theme-vars") {
+      const res = await createThemeVariables(msg.variables);
+      if (res.kind === "variables") {
+        figma.notify(res.made + " theme variables created in “Okra Theme” (Light, Dark modes)");
+      } else {
+        figma.notify(res.made + " theme styles created (Theme/Light, Theme/Dark). Variable modes need a paid Figma plan.");
+      }
       figma.ui.postMessage({ type: "done" });
     }
 

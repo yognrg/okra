@@ -73,6 +73,7 @@ A gamut is the range of colors a screen can actually show. sRGB is the web defau
 - **Auto naming**: the palette is named from its hue (Blue, Emerald, Violet), and you are free to rename it
 - **Live preview** of every shade with the base step marked
 - **WCAG 2 contrast badge** on each shade, so you know what passes AA or AAA before you use it
+- **Theme generator**: treat the current color as primary and get accessible light and dark themes (background, surface, primary, on primary, text, muted, border), AAA where reachable, created as **Figma variables with Light and Dark modes** (falls back to grouped paint styles on plans without variable modes)
 - **Copy as code**: CSS variables (hex), CSS variables (oklch), Tailwind config, or a plain hex list
 - **Add to canvas** as a clean auto layout card with hex labels
 - **Create Figma color styles** named `Name/step`, for example `Blue/500`, each carrying its **hex and OKLCH value in the style description** (Figma's own picker has no OKLCH format, so the value lives on the style)

@@ -1,6 +1,9 @@
 # Theme generator (feature spec)
 
-Status: planned. This documents the accessible theme feature before it is built.
+Status: built (MVP). The Theme tab generates both themes and creates the Figma
+variable collection with Light and Dark modes, with a paint style fallback for
+plans that do not allow variable modes. The on canvas preview mock and the
+AA/AAA toggle remain for a later phase.
 
 ## Goal
 
