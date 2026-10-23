@@ -78,14 +78,15 @@ A gamut is the range of colors a screen can actually show. sRGB is the web defau
 
 ## Scale styles
 
-| Style | Steps | Range |
+Every scale is generated in OKLCH. These presets are naming and step count templates, not reproductions of each brand's exact colors. They give you a clean OKLCH scale in a naming convention your project already uses.
+
+| Style | Steps | Naming |
 |:--|:--|:--|
-| Default | 11 | 50 to 950 |
-| Material | 13 | tones 0 to 100 |
-| iOS | 10 | 50 to 900 |
+| Tailwind | 11 | 50 to 950 |
+| Material | 10 | 50 to 900 |
 | Ant Design | 10 | 1 to 10 |
-| Atlassian | 12 | 0 to 1000 |
-| Orbit | 6 | light to darkest |
+| Atlassian | 7 | 50 to 500 |
+| Semantic | 7 | lightest to darkest |
 | Custom | 5 to 14 | your choice |
 
 ---

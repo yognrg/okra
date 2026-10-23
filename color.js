@@ -180,21 +180,7 @@ const MATERIAL_SCALE = [
   { key: "900", L: 0.360, cMul: 0.64 },
 ];
 
-// iOS / Apple inspired. Fewer, cleaner steps, light tints to deep shades.
-const IOS_SCALE = [
-  { key: "50",  L: 0.968, cMul: 0.20 },
-  { key: "100", L: 0.930, cMul: 0.38 },
-  { key: "200", L: 0.878, cMul: 0.60 },
-  { key: "300", L: 0.806, cMul: 0.82 },
-  { key: "400", L: 0.724, cMul: 0.95 },
-  { key: "500", L: 0.642, cMul: 1.00 }, // base, close to Apple system colors
-  { key: "600", L: 0.560, cMul: 0.98 },
-  { key: "700", L: 0.472, cMul: 0.88 },
-  { key: "800", L: 0.392, cMul: 0.74 },
-  { key: "900", L: 0.318, cMul: 0.58 },
-];
-
-// Ant Design inspired, 10 steps, light at top (1) to dark (10).
+// Ant style naming, 10 steps, light at top (1) to dark (10).
 const ANT_SCALE = [
   { key: "1",  L: 0.974, cMul: 0.18 },
   { key: "2",  L: 0.942, cMul: 0.34 },
@@ -208,7 +194,7 @@ const ANT_SCALE = [
   { key: "10", L: 0.300, cMul: 0.52 },
 ];
 
-// Atlassian inspired tokens, 7 steps 50,75,100,200,300,400,500. Base 400.
+// Atlassian style naming, 7 steps 50,75,100,200,300,400,500. Base 400.
 const ATLAS_SCALE = [
   { key: "50",  L: 0.960, cMul: 0.22 },
   { key: "75",  L: 0.918, cMul: 0.40 },
@@ -219,18 +205,15 @@ const ATLAS_SCALE = [
   { key: "500", L: 0.480, cMul: 0.88 },
 ];
 
-// Orbit (Kiwi.com) inspired, 10 tones with interaction states. Base normal.
-const ORBIT_SCALE = [
-  { key: "light",         L: 0.955, cMul: 0.22 },
-  { key: "light-hover",   L: 0.928, cMul: 0.30 },
-  { key: "light-active",  L: 0.898, cMul: 0.40 },
-  { key: "normal",        L: 0.640, cMul: 1.00 }, // base
-  { key: "normal-hover",  L: 0.590, cMul: 1.00 },
-  { key: "normal-active", L: 0.545, cMul: 0.98 },
-  { key: "dark",          L: 0.500, cMul: 0.92 },
-  { key: "dark-hover",    L: 0.458, cMul: 0.86 },
-  { key: "dark-active",   L: 0.418, cMul: 0.80 },
-  { key: "darker",        L: 0.368, cMul: 0.70 },
+// Semantic naming, 7 steps lightest to darkest. Base "base".
+const SEMANTIC_SCALE = [
+  { key: "lightest", L: 0.955, cMul: 0.22 },
+  { key: "lighter",  L: 0.905, cMul: 0.42 },
+  { key: "light",    L: 0.820, cMul: 0.70 },
+  { key: "base",     L: 0.640, cMul: 1.00 }, // base
+  { key: "dark",     L: 0.520, cMul: 0.92 },
+  { key: "darker",   L: 0.420, cMul: 0.74 },
+  { key: "darkest",  L: 0.330, cMul: 0.58 },
 ];
 
 /*
@@ -260,14 +243,15 @@ function buildCustomScale(n, baseL) {
   return { stops: stops, baseKey: stops[baseIdx] ? stops[baseIdx].key : "500" };
 }
 
+// All scales are generated in OKLCH. These presets differ only in step count
+// and naming convention, so the output drops into whatever a project uses.
 const PRESETS = {
-  default:  { label: "Default",          baseKey: "500",    scale: DEFAULT_SCALE },
-  material: { label: "Material",         baseKey: "500",    scale: MATERIAL_SCALE },
-  ios:      { label: "iOS",              baseKey: "500",    scale: IOS_SCALE },
-  ant:      { label: "Ant Design",       baseKey: "6",      scale: ANT_SCALE },
-  atlas:    { label: "Atlassian",        baseKey: "400",    scale: ATLAS_SCALE },
-  orbit:    { label: "Orbit",            baseKey: "normal", scale: ORBIT_SCALE },
-  custom:   { label: "Custom",           baseKey: "500",    scale: null, custom: true },
+  default:  { label: "Tailwind",   baseKey: "500",  scale: DEFAULT_SCALE },
+  material: { label: "Material",   baseKey: "500",  scale: MATERIAL_SCALE },
+  ant:      { label: "Ant Design", baseKey: "6",    scale: ANT_SCALE },
+  atlas:    { label: "Atlassian",  baseKey: "400",  scale: ATLAS_SCALE },
+  semantic: { label: "Semantic",   baseKey: "base", scale: SEMANTIC_SCALE },
+  custom:   { label: "Custom",     baseKey: "500",  scale: null, custom: true },
 };
 
 /* ---------- auto color naming ----------

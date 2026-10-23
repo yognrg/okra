@@ -196,7 +196,7 @@
 
       <div class="grid2">
         <div class="field">
-          <label>Scale style</label>
+          <label>Scale style <span style="font-weight:400;color:var(--brand)">· OKLCH</span></label>
           <select id="preset"></select>
         </div>
         <div class="field">
@@ -247,7 +247,7 @@
   var countrow = el("countrow"), count = el("count"), countVal = el("countVal");
 
   // populate scale style dropdown
-  var order = ["default", "material", "ios", "ant", "atlas", "orbit", "custom"];
+  var order = ["default", "material", "ant", "atlas", "semantic", "custom"];
   order.forEach(function (id) {
     var p = S.PRESETS[id];
     var o = document.createElement("option");
